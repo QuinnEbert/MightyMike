@@ -10,5 +10,6 @@
 @property (weak) id<MMTilePaletteDelegate> delegate;
 @property (assign) NSInteger columns;   // tiles per row
 @property (assign) CGFloat zoom;        // tile preview zoom
+@property (assign) NSInteger selectedTile; // highlight selection
+- (void)updateSize;
 @end
-

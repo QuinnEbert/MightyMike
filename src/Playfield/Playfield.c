@@ -494,6 +494,13 @@ void MM_SetTileAttrib(int index, const TileAttribType* a)
     gTileAttributes[index] = *a;
 }
 
+const uint8_t* MM_GetPriorityColorMask(void)
+{
+    // Return the 256-byte table used for pixel-accurate priority masking
+    // true (nonzero) means pixel is solid for priority purposes; false means transparent
+    return (const uint8_t*)gColorMaskArray;
+}
+
 
 
 /*************** INIT PLAYFIELD *******************/

@@ -123,3 +123,4 @@ const uint8_t* MM_GetTilePixelsForTile(int tileIndex);
 Byte* MM_GetAltMapRowPtr(int row);
 TileAttribType* MM_GetTileAttribs(int* outCount);
 void MM_SetTileAttrib(int index, const TileAttribType* a);
+const uint8_t* MM_GetPriorityColorMask(void); // 256-byte table: 1=solid, 0=transparent for priority pixel mask

@@ -20,6 +20,7 @@ project(${GAME_TARGET}
 	LANGUAGES C CXX)
 
 option(BUILD_SDL_FROM_SOURCE "Build SDL from source" OFF)
+option(BUILD_EDITOR_ONLY "Only build the macOS editor target (skip main game)" OFF)
 option(SDL_STATIC "Static link SDL" OFF)
 
 option(SANITIZE "Build with asan/ubsan" OFF)
@@ -78,15 +79,17 @@ if(NOT DEFINED SDL3_DIR)
 	unset(_sdl3_maybe)
 endif()
 
-if(NOT BUILD_SDL_FROM_SOURCE)
-	find_package(SDL3 CONFIG REQUIRED)
-	message("Found pre-built SDL3")
-else()
-	if(NOT DEFINED SDL3_DIR)
-		set(SDL3_DIR "${CMAKE_SOURCE_DIR}/extern/SDL")
-	endif()
-	message("Building SDL3 from source: " ${SDL3_DIR})
-	add_subdirectory("${SDL3_DIR}" EXCLUDE_FROM_ALL)
+if(NOT BUILD_EDITOR_ONLY)
+    if(NOT BUILD_SDL_FROM_SOURCE)
+        find_package(SDL3 CONFIG REQUIRED)
+        message("Found pre-built SDL3")
+    else()
+        if(NOT DEFINED SDL3_DIR)
+            set(SDL3_DIR "${CMAKE_SOURCE_DIR}/extern/SDL")
+        endif()
+        message("Building SDL3 from source: " ${SDL3_DIR})
+        add_subdirectory("${SDL3_DIR}" EXCLUDE_FROM_ALL)
+    endif()
 endif()
 
 #------------------------------------------------------------------------------
@@ -95,7 +98,9 @@ endif()
 
 add_subdirectory(extern/Pomme)
 
-find_package(OpenGL REQUIRED)  # only actually required if we want to force GLRENDER
+if(NOT BUILD_EDITOR_ONLY)
+    find_package(OpenGL REQUIRED)  # only actually required if we want to force GLRENDER
+endif()
 
 #------------------------------------------------------------------------------
 # EXECUTABLE TARGET
@@ -110,7 +115,7 @@ file(GLOB_RECURSE GAME_SOURCES CONFIGURE_DEPENDS ${GAME_SRCDIR}/*.c ${GAME_SRCDI
 # Make source groups match file tree
 source_group(TREE ${GAME_SRCDIR} PREFIX "" FILES ${GAME_SOURCES})
 
-if(WIN32)
+if(WIN32 AND NOT BUILD_EDITOR_ONLY)
 	# Windows resource file
 	configure_file(${CMAKE_SOURCE_DIR}/packaging/win32.rc.in ${CMAKE_SOURCE_DIR}/packaging/${GAME_TARGET}.exe.rc)
 	list(APPEND GAME_SOURCES ${CMAKE_SOURCE_DIR}/packaging/${GAME_TARGET}.exe.rc)
@@ -119,10 +124,15 @@ elseif(APPLE)
 	set_source_files_properties(${CMAKE_SOURCE_DIR}/packaging/${GAME_TARGET}.icns PROPERTIES MACOSX_PACKAGE_LOCATION "Resources")
 endif()
 
-add_executable(${GAME_TARGET} ${GAME_SOURCES})
+if(NOT BUILD_EDITOR_ONLY)
+    add_executable(${GAME_TARGET} ${GAME_SOURCES})
+endif()
 
-target_include_directories(${GAME_TARGET} PRIVATE ${GAME_SRCDIR}/Headers)
+if(NOT BUILD_EDITOR_ONLY)
+    target_include_directories(${GAME_TARGET} PRIVATE ${GAME_SRCDIR}/Headers)
+endif()
 
+if(NOT BUILD_EDITOR_ONLY)
 #------------------------------------------------------------------------------
 # COMPILER/LINKER OPTIONS
 #------------------------------------------------------------------------------
@@ -213,7 +223,7 @@ endif()
 target_link_libraries(${GAME_TARGET} PRIVATE Pomme OpenGL::GL)
 
 # Add required frameworks for KillMacMouseAcceleration
-if(APPLE)
+if(APPLE AND NOT BUILD_EDITOR_ONLY)
 	target_link_libraries(${GAME_TARGET} PRIVATE "-framework Foundation" "-framework IOKit")
 endif()
 
@@ -310,6 +320,9 @@ if(WIN32)
 	include(InstallRequiredSystemLibraries)
 endif()
 
+# End of main game target when building editor-only
+endif()
+
 # Copy documentation to output folder
 configure_file(${CMAKE_SOURCE_DIR}/packaging/ReadMe.txt.in ${CMAKE_CURRENT_BINARY_DIR}/ReadMe.txt)
 
@@ -325,6 +338,8 @@ if(APPLE)
         tools/LevelEditor/AppDelegate.mm
         tools/LevelEditor/MMMapView.h
         tools/LevelEditor/MMMapView.m
+        tools/LevelEditor/MMTilePaletteView.h
+        tools/LevelEditor/MMTilePaletteView.m
         # Use existing engine bits to parse maps/tilesets and palette
         ${GAME_SRCDIR}/Playfield/Playfield.c
         ${GAME_SRCDIR}/Heart/Misc.c
@@ -343,9 +358,19 @@ if(APPLE)
         MACOSX_BUNDLE_SHORT_VERSION_STRING ${GAME_VERSION}
         MACOSX_BUNDLE_COPYRIGHT ${GAME_COPYRIGHT}
     )
+    # Always add the SDL3 headers include path for convenience
+    target_include_directories(${EDITOR_TARGET} PRIVATE "${CMAKE_SOURCE_DIR}/extern/SDL3.framework/Headers")
 
-    # Link to Pomme and Cocoa
-    target_link_libraries(${EDITOR_TARGET} PRIVATE Pomme "-framework Cocoa")
+    if(EXISTS "${CMAKE_SOURCE_DIR}/extern/SDL3.framework")
+        set_target_properties(${EDITOR_TARGET} PROPERTIES
+            XCODE_EMBED_FRAMEWORKS "extern/SDL3.framework"
+            XCODE_EMBED_FRAMEWORKS_CODE_SIGN_ON_COPY "YES"
+            XCODE_EMBED_FRAMEWORKS_REMOVE_HEADERS_ON_COPY "YES"
+        )
+    endif()
+
+    # Link to Pomme, Cocoa, and SDL3 framework headers/libs directly
+    target_link_libraries(${EDITOR_TARGET} PRIVATE Pomme "-framework Cocoa" "-framework SDL3")
 
     # Copy Data folder into editor bundle
     if(APPLE)

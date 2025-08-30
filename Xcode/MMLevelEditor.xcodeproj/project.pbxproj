@@ -1,0 +1,433 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 56;
+	objects = {
+
+/* Begin PBXBuildFile section */
+        EDED001001 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = EDED000001 /* main.m */; };
+        EDED001002 /* AppDelegate.mm in Sources */ = {isa = PBXBuildFile; fileRef = EDED000003 /* AppDelegate.mm */; };
+        EDED001003 /* MMMapView.m in Sources */ = {isa = PBXBuildFile; fileRef = EDED000006 /* MMMapView.m */; };
+        EDED001004 /* MMTilePaletteView.m in Sources */ = {isa = PBXBuildFile; fileRef = EDED000009 /* MMTilePaletteView.m */; };
+        EDED001010 /* Playfield.c in Sources */ = {isa = PBXBuildFile; fileRef = EDED000101 /* Playfield.c */; };
+        EDED001011 /* Misc.c in Sources */ = {isa = PBXBuildFile; fileRef = EDED000102 /* Misc.c */; };
+        EDED001012 /* Palette.c in Sources */ = {isa = PBXBuildFile; fileRef = EDED000103 /* Palette.c */; };
+        EDED001013 /* TGA.c in Sources */ = {isa = PBXBuildFile; fileRef = EDED000104 /* TGA.c */; };
+        EDED001020 /* Pomme.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EDED000201 /* Pomme.cpp */; };
+        EDED001021 /* Files.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EDED000202 /* Files.cpp */; };
+        EDED001022 /* HostVolume.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EDED000203 /* HostVolume.cpp */; };
+        EDED001023 /* Resources.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EDED000204 /* Resources.cpp */; };
+        EDED001024 /* Memory.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EDED000205 /* Memory.cpp */; };
+        EDED001025 /* structpack.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EDED000206 /* structpack.cpp */; };
+        EDED001026 /* memstream.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EDED000207 /* memstream.cpp */; };
+        EDED001027 /* StringUtils.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EDED000208 /* StringUtils.cpp */; };
+        EDED001028 /* bigendianstreams.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EDED000209 /* bigendianstreams.cpp */; };
+        EDED001029 /* IEEEExtended.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EDED00020A /* IEEEExtended.cpp */; };
+        EDED00102A /* TextUtilities.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EDED00020B /* TextUtilities.cpp */; };
+        EDED00102B /* TimeManager.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EDED00020C /* TimeManager.cpp */; };
+        EDED00102C /* Color.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EDED00020D /* Color.cpp */; };
+        EDED00102D /* ARGBPixmap.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EDED00020E /* ARGBPixmap.cpp */; };
+        EDED00102E /* SystemPalettes.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EDED00020F /* SystemPalettes.cpp */; };
+        EDED00102F /* Cinepak.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EDED000210 /* Cinepak.cpp */; };
+        EDED001030 /* moov.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EDED000211 /* moov.cpp */; };
+        EDED001050 /* EditorBridge.mm in Sources */ = {isa = PBXBuildFile; fileRef = EDED00000B /* EditorBridge.mm */; };
+        EDED001040 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = EDED000301 /* Cocoa.framework */; };
+        EDED001041 /* SDL3.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = EDED000302 /* SDL3.framework */; settings = {ATTRIBUTES = (Weak, );}; };
+        EDED001042 /* SDL3.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = EDED000302 /* SDL3.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, );}; };
+/* End PBXBuildFile section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+        EDED00F000 /* Embed Frameworks */ = {
+            isa = PBXCopyFilesBuildPhase;
+            buildActionMask = 2147483647;
+            dstPath = "";
+            dstSubfolderSpec = 10;
+            files = (
+                EDED001042 /* SDL3.framework in Embed Frameworks */,
+            );
+            name = "Embed Frameworks";
+            runOnlyForDeploymentPostprocessing = 0;
+        };
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+        EDED000001 /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ../tools/LevelEditor/main.m; sourceTree = SOURCE_ROOT; };
+        EDED000002 /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ../tools/LevelEditor/AppDelegate.h; sourceTree = SOURCE_ROOT; };
+        EDED000003 /* AppDelegate.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = ../tools/LevelEditor/AppDelegate.mm; sourceTree = SOURCE_ROOT; };
+        EDED000005 /* MMMapView.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ../tools/LevelEditor/MMMapView.h; sourceTree = SOURCE_ROOT; };
+        EDED000006 /* MMMapView.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ../tools/LevelEditor/MMMapView.m; sourceTree = SOURCE_ROOT; };
+        EDED000008 /* MMTilePaletteView.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ../tools/LevelEditor/MMTilePaletteView.h; sourceTree = SOURCE_ROOT; };
+        EDED000009 /* MMTilePaletteView.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ../tools/LevelEditor/MMTilePaletteView.m; sourceTree = SOURCE_ROOT; };
+        EDED00000A /* EditorBridge.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ../tools/LevelEditor/EditorBridge.h; sourceTree = SOURCE_ROOT; };
+        EDED00000B /* EditorBridge.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = ../tools/LevelEditor/EditorBridge.mm; sourceTree = SOURCE_ROOT; };
+        EDED000101 /* Playfield.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = ../src/Playfield/Playfield.c; sourceTree = SOURCE_ROOT; };
+        EDED000102 /* Misc.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = ../src/Heart/Misc.c; sourceTree = SOURCE_ROOT; };
+        EDED000103 /* Palette.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = ../src/Drivers/Palette.c; sourceTree = SOURCE_ROOT; };
+        EDED000104 /* TGA.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = ../src/Drivers/TGA.c; sourceTree = SOURCE_ROOT; };
+        EDED000201 /* Pomme.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = ../extern/Pomme/src/Pomme.cpp; sourceTree = SOURCE_ROOT; };
+        EDED000202 /* Files.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = ../extern/Pomme/src/Files/Files.cpp; sourceTree = SOURCE_ROOT; };
+        EDED000203 /* HostVolume.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = ../extern/Pomme/src/Files/HostVolume.cpp; sourceTree = SOURCE_ROOT; };
+        EDED000204 /* Resources.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = ../extern/Pomme/src/Files/Resources.cpp; sourceTree = SOURCE_ROOT; };
+        EDED000205 /* Memory.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = ../extern/Pomme/src/Memory/Memory.cpp; sourceTree = SOURCE_ROOT; };
+        EDED000206 /* structpack.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = ../extern/Pomme/src/Utilities/structpack.cpp; sourceTree = SOURCE_ROOT; };
+        EDED000207 /* memstream.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = ../extern/Pomme/src/Utilities/memstream.cpp; sourceTree = SOURCE_ROOT; };
+        EDED000208 /* StringUtils.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = ../extern/Pomme/src/Utilities/StringUtils.cpp; sourceTree = SOURCE_ROOT; };
+        EDED000209 /* bigendianstreams.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = ../extern/Pomme/src/Utilities/bigendianstreams.cpp; sourceTree = SOURCE_ROOT; };
+        EDED00020A /* IEEEExtended.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = ../extern/Pomme/src/Utilities/IEEEExtended.cpp; sourceTree = SOURCE_ROOT; };
+        EDED00020B /* TextUtilities.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = ../extern/Pomme/src/Text/TextUtilities.cpp; sourceTree = SOURCE_ROOT; };
+        EDED00020C /* TimeManager.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = ../extern/Pomme/src/Time/TimeManager.cpp; sourceTree = SOURCE_ROOT; };
+        EDED00020D /* Color.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = ../extern/Pomme/src/Graphics/Color.cpp; sourceTree = SOURCE_ROOT; };
+        EDED00020E /* ARGBPixmap.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = ../extern/Pomme/src/Graphics/ARGBPixmap.cpp; sourceTree = SOURCE_ROOT; };
+        EDED00020F /* SystemPalettes.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = ../extern/Pomme/src/Graphics/SystemPalettes.cpp; sourceTree = SOURCE_ROOT; };
+        EDED000210 /* Cinepak.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = ../extern/Pomme/src/Video/Cinepak.cpp; sourceTree = SOURCE_ROOT; };
+        EDED000211 /* moov.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = ../extern/Pomme/src/Video/moov.cpp; sourceTree = SOURCE_ROOT; };
+        EDED000301 /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = System/Library/Frameworks/Cocoa.framework; sourceTree = SDKROOT; };
+        EDED000302 /* SDL3.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = ../extern/SDL3.framework; sourceTree = SOURCE_ROOT; };
+        EDED000400 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+        EDED00A000 /* Frameworks */ = {
+            isa = PBXFrameworksBuildPhase;
+            buildActionMask = 2147483647;
+            files = (
+                EDED001040 /* Cocoa.framework in Frameworks */,
+                EDED001041 /* SDL3.framework in Frameworks */,
+            );
+            runOnlyForDeploymentPostprocessing = 0;
+        };
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+        EDED000000 /* Project */ = {
+            isa = PBXGroup;
+            children = (
+                EDED000700 /* Editor */,
+                EDED000800 /* Engine */,
+                EDED000900 /* Pomme */,
+                EDED000300 /* Frameworks */,
+                EDED000500 /* Products */,
+            );
+            sourceTree = "<group>";
+        };
+        EDED000300 /* Frameworks */ = {
+            isa = PBXGroup;
+            children = (
+                EDED000301 /* Cocoa.framework */,
+                EDED000302 /* SDL3.framework */,
+            );
+            name = Frameworks;
+            sourceTree = "<group>";
+        };
+        EDED000500 /* Products */ = {
+            isa = PBXGroup;
+            children = (
+                EDED00B001 /* MMLevelEditor.app */,
+            );
+            name = Products;
+            sourceTree = "<group>";
+        };
+        EDED000700 /* Editor */ = {
+            isa = PBXGroup;
+            children = (
+                EDED000001 /* main.m */,
+                EDED000002 /* AppDelegate.h */,
+                EDED000003 /* AppDelegate.mm */,
+                EDED000005 /* MMMapView.h */,
+                EDED000006 /* MMMapView.m */,
+                EDED000008 /* MMTilePaletteView.h */,
+                EDED000009 /* MMTilePaletteView.m */,
+                EDED00000A /* EditorBridge.h */,
+                EDED00000B /* EditorBridge.mm */,
+                EDED000400 /* Info.plist */,
+            );
+            name = Editor;
+            sourceTree = "<group>";
+            path = MMLevelEditor;
+        };
+        EDED000800 /* Engine */ = {
+            isa = PBXGroup;
+            children = (
+                EDED000101 /* Playfield.c */,
+                EDED000102 /* Misc.c */,
+                EDED000103 /* Palette.c */,
+                EDED000104 /* TGA.c */,
+            );
+            name = Engine;
+            sourceTree = "<group>";
+        };
+        EDED000900 /* Pomme */ = {
+            isa = PBXGroup;
+            children = (
+                EDED000201 /* Pomme.cpp */,
+                EDED000202 /* Files.cpp */,
+                EDED000203 /* HostVolume.cpp */,
+                EDED000204 /* Resources.cpp */,
+                EDED000205 /* Memory.cpp */,
+                EDED000206 /* structpack.cpp */,
+                EDED000207 /* memstream.cpp */,
+                EDED000208 /* StringUtils.cpp */,
+                EDED000209 /* bigendianstreams.cpp */,
+                EDED00020A /* IEEEExtended.cpp */,
+                EDED00020B /* TextUtilities.cpp */,
+                EDED00020C /* TimeManager.cpp */,
+                EDED00020D /* Color.cpp */,
+                EDED00020E /* ARGBPixmap.cpp */,
+                EDED00020F /* SystemPalettes.cpp */,
+                EDED000210 /* Cinepak.cpp */,
+                EDED000211 /* moov.cpp */,
+            );
+            name = Pomme;
+            sourceTree = "<group>";
+        };
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+        EDED00B000 /* MMLevelEditor */ = {
+            isa = PBXNativeTarget;
+            buildConfigurationList = EDED00C000 /* Build configuration list for PBXNativeTarget "MMLevelEditor" */;
+            buildPhases = (
+                EDED00C500 /* Fetch SDL3 Framework */,
+                EDED00A100 /* Sources */,
+                EDED00A000 /* Frameworks */,
+                EDED00E000 /* Resources */,
+                EDED00F000 /* Embed Frameworks */,
+                EDED00D000 /* ShellScript */,
+            );
+            buildRules = (
+            );
+            dependencies = (
+            );
+            name = MMLevelEditor;
+            productName = MMLevelEditor;
+            productReference = EDED00B001 /* MMLevelEditor.app */;
+            productType = "com.apple.product-type.application";
+        };
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+        EDED000010 /* Project object */ = {
+            isa = PBXProject;
+            attributes = {
+                LastUpgradeCheck = 1500;
+                TargetAttributes = {
+                };
+            };
+            buildConfigurationList = EDED000011 /* Build configuration list for PBXProject "MMLevelEditor" */;
+            compatibilityVersion = "Xcode 15.0";
+            developmentRegion = en;
+            hasScannedForEncodings = 0;
+            knownRegions = (
+                en,
+            );
+            mainGroup = EDED000000 /* Project */;
+            productRefGroup = EDED000500 /* Products */;
+            projectDirPath = "";
+            projectRoot = "";
+            targets = (
+                EDED00B000 /* MMLevelEditor */,
+            );
+        };
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+        EDED00E000 /* Resources */ = {
+            isa = PBXResourcesBuildPhase;
+            buildActionMask = 2147483647;
+            files = (
+            );
+            runOnlyForDeploymentPostprocessing = 0;
+        };
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+        EDED00C500 /* Fetch SDL3 Framework */ = {
+            isa = PBXShellScriptBuildPhase;
+            buildActionMask = 2147483647;
+            files = (
+            );
+            inputFileListPaths = (
+            );
+            inputPaths = (
+            );
+            name = "Fetch SDL3 Framework";
+            outputFileListPaths = (
+            );
+            outputPaths = (
+            );
+            runOnlyForDeploymentPostprocessing = 0;
+            shellPath = /bin/sh;
+            shellScript = "set -e\nFW_DIR=\"$SRCROOT/../extern/SDL3.framework\"\nif [ -d \"$FW_DIR\" ]; then\n  echo \"SDL3.framework already present\"\n  exit 0\nfi\nTMPDIR=\"${TMPDIR:-/tmp}\"\nWORK=\"$TMPDIR/sdl3_fetch.$$\"\nmkdir -p \"$WORK\"\nURLS=(\"https://libsdl.org/release/SDL3-3.2.2.dmg\" \"https://github.com/libsdl-org/SDL/releases/download/release-3.2.2/SDL3-3.2.2.dmg\")\nOK=0\nfor url in \"${URLS[@]}\"; do\n  echo \"Downloading $url\"\n  if /usr/bin/curl -L --fail -o \"$WORK/sdl3.dmg\" \"$url\"; then\n    OK=1; break;\n  fi\ndone\nif [ \"$OK\" != \"1\" ]; then\n  echo \"Failed to download SDL3\"\n  exit 1\nfi\nhdiutil attach -nobrowse -mountpoint \"$WORK/mnt\" \"$WORK/sdl3.dmg\" >/dev/null\ncp -R \"$WORK/mnt/SDL3.xcframework/macos-arm64_x86_64/SDL3.framework\" \"$SRCROOT/../extern/\"\nhdiutil detach \"$WORK/mnt\" >/dev/null || true\nrm -rf \"$WORK\"\n";
+        };
+        EDED00D000 /* ShellScript */ = {
+            isa = PBXShellScriptBuildPhase;
+            buildActionMask = 2147483647;
+            files = (
+            );
+            inputFileListPaths = (
+            );
+            inputPaths = (
+            );
+            name = "Copy Data";
+            outputFileListPaths = (
+            );
+            outputPaths = (
+            );
+            runOnlyForDeploymentPostprocessing = 0;
+            shellPath = /bin/sh;
+            shellScript = "set -e\nRES=\"$TARGET_BUILD_DIR/$UNLOCALIZED_RESOURCES_FOLDER_PATH\"\nmkdir -p \"$RES\"\nrsync -a \"$SRCROOT/../Data\" \"$RES/\"\n";
+        };
+/* End PBXShellScriptBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+        EDED00A100 /* Sources */ = {
+            isa = PBXSourcesBuildPhase;
+            buildActionMask = 2147483647;
+            files = (
+                EDED001050 /* EditorBridge.mm in Sources */,
+                EDED001001 /* main.m in Sources */,
+                EDED001002 /* AppDelegate.mm in Sources */,
+                EDED001003 /* MMMapView.m in Sources */,
+                EDED001004 /* MMTilePaletteView.m in Sources */,
+                EDED001010 /* Playfield.c in Sources */,
+                EDED001011 /* Misc.c in Sources */,
+                EDED001012 /* Palette.c in Sources */,
+                EDED001013 /* TGA.c in Sources */,
+                EDED001020 /* Pomme.cpp in Sources */,
+                EDED001021 /* Files.cpp in Sources */,
+                EDED001022 /* HostVolume.cpp in Sources */,
+                EDED001023 /* Resources.cpp in Sources */,
+                EDED001024 /* Memory.cpp in Sources */,
+                EDED001025 /* structpack.cpp in Sources */,
+                EDED001026 /* memstream.cpp in Sources */,
+                EDED001027 /* StringUtils.cpp in Sources */,
+                EDED001028 /* bigendianstreams.cpp in Sources */,
+                EDED001029 /* IEEEExtended.cpp in Sources */,
+                EDED00102A /* TextUtilities.cpp in Sources */,
+                EDED00102B /* TimeManager.cpp in Sources */,
+                EDED00102C /* Color.cpp in Sources */,
+                EDED00102D /* ARGBPixmap.cpp in Sources */,
+                EDED00102E /* SystemPalettes.cpp in Sources */,
+                EDED00102F /* Cinepak.cpp in Sources */,
+                EDED001030 /* moov.cpp in Sources */,
+            );
+            runOnlyForDeploymentPostprocessing = 0;
+        };
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+        EDED000012 /* Debug */ = {
+            isa = XCBuildConfiguration;
+            buildSettings = {
+                CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+                ONLY_ACTIVE_ARCH = YES;
+                CLANG_ENABLE_OBJC_ARC = YES;
+                CODE_SIGN_STYLE = Automatic;
+                PRODUCT_BUNDLE_IDENTIFIER = io.jor.mightymike.editor.native;
+                PRODUCT_NAME = MMLevelEditor;
+                INFOPLIST_FILE = MMLevelEditor/Info.plist;
+                MACOSX_DEPLOYMENT_TARGET = 10.13;
+                SDKROOT = macosx;
+                HEADER_SEARCH_PATHS = (
+                    "$(SRCROOT)/../src/Headers",
+                    "$(SRCROOT)/../extern/Pomme/src",
+                    "$(SRCROOT)/../extern/SDL3.framework/Headers",
+                );
+                FRAMEWORK_SEARCH_PATHS = (
+                    "$(inherited)",
+                    "$(SRCROOT)/../extern",
+                );
+                GCC_PREPROCESSOR_DEFINITIONS = (
+                    "POMME_CASE_SENSITIVE_FSSPEC=1",
+                );
+                OTHER_LDFLAGS = (
+                    "-framework",
+                    Cocoa,
+                    "-framework",
+                    SDL3,
+                );
+                SUPPORTED_PLATFORMS = "macosx";
+                VALID_ARCHS = "arm64 x86_64";
+            };
+            name = Debug;
+        };
+        EDED000013 /* Release */ = {
+            isa = XCBuildConfiguration;
+            buildSettings = {
+                CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+                CLANG_ENABLE_OBJC_ARC = YES;
+                CODE_SIGN_STYLE = Automatic;
+                PRODUCT_BUNDLE_IDENTIFIER = io.jor.mightymike.editor.native;
+                PRODUCT_NAME = MMLevelEditor;
+                INFOPLIST_FILE = MMLevelEditor/Info.plist;
+                MACOSX_DEPLOYMENT_TARGET = 10.13;
+                SDKROOT = macosx;
+                HEADER_SEARCH_PATHS = (
+                    "$(SRCROOT)/../src/Headers",
+                    "$(SRCROOT)/../extern/Pomme/src",
+                    "$(SRCROOT)/../extern/SDL3.framework/Headers",
+                );
+                FRAMEWORK_SEARCH_PATHS = (
+                    "$(inherited)",
+                    "$(SRCROOT)/../extern",
+                );
+                GCC_PREPROCESSOR_DEFINITIONS = (
+                    "POMME_CASE_SENSITIVE_FSSPEC=1",
+                );
+                OTHER_LDFLAGS = (
+                    "-framework",
+                    Cocoa,
+                    "-framework",
+                    SDL3,
+                );
+                SUPPORTED_PLATFORMS = "macosx";
+                VALID_ARCHS = "arm64 x86_64";
+            };
+            name = Release;
+        };
+        EDED00C001 /* Debug */ = {
+            isa = XCBuildConfiguration;
+            buildSettings = {
+                SDKROOT = macosx;
+            };
+            name = Debug;
+        };
+        EDED00C002 /* Release */ = {
+            isa = XCBuildConfiguration;
+            buildSettings = {
+                SDKROOT = macosx;
+            };
+            name = Release;
+        };
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+        EDED000011 /* Build configuration list for PBXProject "MMLevelEditor" */ = {
+            isa = XCConfigurationList;
+            buildConfigurations = (
+                EDED00C001 /* Debug */,
+                EDED00C002 /* Release */,
+            );
+            defaultConfigurationIsVisible = 0;
+            defaultConfigurationName = Debug;
+        };
+        EDED00C000 /* Build configuration list for PBXNativeTarget "MMLevelEditor" */ = {
+            isa = XCConfigurationList;
+            buildConfigurations = (
+                EDED000012 /* Debug */,
+                EDED000013 /* Release */,
+            );
+            defaultConfigurationIsVisible = 0;
+            defaultConfigurationName = Debug;
+        };
+/* End XCConfigurationList section */
+
+/* Begin PBXProductReference section */
+        EDED00B001 /* MMLevelEditor.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MMLevelEditor.app; sourceTree = BUILT_PRODUCTS_DIR; };
+/* End PBXProductReference section */
+
+	};
+	rootObject = EDED000010 /* Project object */;
+}

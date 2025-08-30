@@ -1,6 +1,5 @@
 #import "MMTilePaletteView.h"
-#import "playfield.h"
-#import "externs.h"
+#import "EditorBridge.h"
 
 @implementation MMTilePaletteView
 
@@ -26,7 +25,7 @@
 
 - (void)updateSize
 {
-    int n = MM_GetNumTiles();
+    int n = EB_GetNumTiles();
     if (n <= 0) n = 1;
     int rows = (n + (int)self.columns - 1) / (int)self.columns;
     [self setFrameSize:NSMakeSize(self.columns * TILE_SIZE * self.zoom,
@@ -39,7 +38,7 @@
     [[NSColor windowBackgroundColor] setFill];
     NSRectFill(self.bounds);
 
-    int n = MM_GetNumTiles(); if (n<=0) return;
+    int n = EB_GetNumTiles(); if (n<=0) return;
     NSGraphicsContext* gc = [NSGraphicsContext currentContext];
     [gc saveGraphicsState];
 
@@ -50,7 +49,7 @@
         CGFloat x = c * TILE_SIZE * self.zoom;
         CGFloat y = r * TILE_SIZE * self.zoom;
 
-        const uint8_t* src = MM_GetTilePixelsForTile(i);
+        const uint8_t* src = EB_GetTilePixels(i);
         if (!src) continue;
 
         NSBitmapImageRep* rep = [[NSBitmapImageRep alloc]
@@ -71,7 +70,8 @@
             for (int px=0; px<TILE_SIZE; px++)
             {
                 uint8_t idx = *src++;
-                uint32_t rgba = gGamePalette.finalColors32[idx];
+                uint32_t rgba;
+                rgba = EB_GetPaletteRGBA32()[idx];
                 row[0]=(rgba>>24)&0xFF; row[1]=(rgba>>16)&0xFF; row[2]=(rgba>>8)&0xFF; row[3]=rgba&0xFF; row+=4;
             }
         }
@@ -79,6 +79,14 @@
         [img addRepresentation:rep];
         [img drawInRect:NSMakeRect(x, y, TILE_SIZE*self.zoom, TILE_SIZE*self.zoom)
                 fromRect:NSZeroRect operation:NSCompositingOperationSourceOver fraction:1.0 respectFlipped:YES hints:nil];
+
+        if (i == self.selectedTile)
+        {
+            [[NSColor colorWithCalibratedRed:0 green:0.6 blue:1 alpha:0.8] setStroke];
+            NSBezierPath* p = [NSBezierPath bezierPathWithRect:NSMakeRect(x+0.5, y+0.5, TILE_SIZE*self.zoom-1, TILE_SIZE*self.zoom-1)];
+            p.lineWidth = 2.0;
+            [p stroke];
+        }
     }
 
     [gc restoreGraphicsState];
@@ -90,7 +98,7 @@
     int c = p.x / (TILE_SIZE * self.zoom);
     int r = p.y / (TILE_SIZE * self.zoom);
     int idx = r * (int)self.columns + c;
-    if (idx >= 0 && idx < MM_GetNumTiles())
+    if (idx >= 0 && idx < EB_GetNumTiles())
     {
         if ([self.delegate respondsToSelector:@selector(tilePalette:didSelectTile:)])
             [self.delegate tilePalette:self didSelectTile:idx];
@@ -98,4 +106,3 @@
 }
 
 @end
-

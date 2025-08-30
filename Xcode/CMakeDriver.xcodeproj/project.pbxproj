@@ -1,0 +1,211 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 56;
+	objects = {
+
+/* Begin PBXAggregateTarget section */
+        DDBE836C2B5A000100000001 /* Build Game (CMake) */ = {
+            isa = PBXAggregateTarget;
+            buildConfigurationList = DDBE83752B5A000100000001 /* Build configuration list for PBXAggregateTarget "Build Game (CMake)" */;
+            buildPhases = (
+                DDBE836D2B5A000100000001 /* ShellScript */,
+            );
+            dependencies = (
+            );
+            name = "Build Game (CMake)";
+            productName = Build;
+        };
+        DDBE83702B5A000100000001 /* Build Editor (CMake) */ = {
+            isa = PBXAggregateTarget;
+            buildConfigurationList = DDBE83762B5A000100000001 /* Build configuration list for PBXAggregateTarget "Build Editor (CMake)" */;
+            buildPhases = (
+                DDBE83712B5A000100000001 /* ShellScript */,
+            );
+            dependencies = (
+            );
+            name = "Build Editor (CMake)";
+            productName = Build;
+        };
+/* End PBXAggregateTarget section */
+
+/* Begin PBXBuildFile section */
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+        DDBE83802B5A050000000001 /* src */ = {isa = PBXFileReference; lastKnownFileType = folder; path = src; sourceTree = SOURCE_ROOT; };
+        DDBE83812B5A050000000002 /* tools */ = {isa = PBXFileReference; lastKnownFileType = folder; path = tools; sourceTree = SOURCE_ROOT; };
+        DDBE83822B5A050000000003 /* Data */ = {isa = PBXFileReference; lastKnownFileType = folder; path = Data; sourceTree = SOURCE_ROOT; };
+        DDBE83832B5A050000000004 /* extern */ = {isa = PBXFileReference; lastKnownFileType = folder; path = extern; sourceTree = SOURCE_ROOT; };
+        DDBE83842B5A050000000005 /* docs */ = {isa = PBXFileReference; lastKnownFileType = folder; path = docs; sourceTree = SOURCE_ROOT; };
+        DDBE83852B5A050000000006 /* packaging */ = {isa = PBXFileReference; lastKnownFileType = folder; path = packaging; sourceTree = SOURCE_ROOT; };
+        DDBE83862B5A050000000007 /* build */ = {isa = PBXFileReference; lastKnownFileType = folder; path = build; sourceTree = SOURCE_ROOT; };
+        DDBE83872B5A050000000008 /* CMakeLists.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = CMakeLists.txt; sourceTree = SOURCE_ROOT; };
+        DDBE83882B5A050000000009 /* BUILD.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = BUILD.md; sourceTree = SOURCE_ROOT; };
+        DDBE83892B5A05000000000A /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = SOURCE_ROOT; };
+/* End PBXFileReference section */
+
+/* Begin PBXGroup section */
+        DDBE835E2B59FFF800000001 = {
+            isa = PBXGroup;
+            children = (
+                DDBE83802B5A050000000001 /* src */,
+                DDBE83812B5A050000000002 /* tools */,
+                DDBE83822B5A050000000003 /* Data */,
+                DDBE83832B5A050000000004 /* extern */,
+                DDBE83842B5A050000000005 /* docs */,
+                DDBE83852B5A050000000006 /* packaging */,
+                DDBE83862B5A050000000007 /* build */,
+                DDBE83872B5A050000000008 /* CMakeLists.txt */,
+                DDBE83882B5A050000000009 /* BUILD.md */,
+                DDBE83892B5A05000000000A /* README.md */,
+            );
+            sourceTree = "<group>";
+        };
+/* End PBXGroup section */
+
+/* Begin PBXProject section */
+        DDBE83602B59FFFA00000001 /* Project object */ = {
+            isa = PBXProject;
+            attributes = {
+                LastUpgradeCheck = 1500;
+                TargetAttributes = {
+                };
+            };
+            buildConfigurationList = DDBE83612B59FFFA00000001 /* Build configuration list for PBXProject "CMakeDriver" */;
+            compatibilityVersion = "Xcode 15.0";
+            developmentRegion = en;
+            hasScannedForEncodings = 0;
+            knownRegions = (
+                en,
+            );
+            mainGroup = DDBE835E2B59FFF800000001;
+            productRefGroup = DDBE835E2B59FFF800000001;
+            projectDirPath = "";
+            projectRoot = "";
+            targets = (
+                DDBE836C2B5A000100000001 /* Build Game (CMake) */,
+                DDBE83702B5A000100000001 /* Build Editor (CMake) */,
+            );
+        };
+/* End PBXProject section */
+
+/* Begin PBXShellScriptBuildPhase section */
+        DDBE836D2B5A000100000001 /* ShellScript */ = {
+            isa = PBXShellScriptBuildPhase;
+            buildActionMask = 2147483647;
+            files = (
+            );
+            inputFileListPaths = (
+            );
+            inputPaths = (
+            );
+            name = ShellScript;
+            outputFileListPaths = (
+            );
+            outputPaths = (
+            );
+            runOnlyForDeploymentPostprocessing = 0;
+            shellPath = /bin/sh;
+            shellScript = "set -e\nREPO_ROOT=\"$SRCROOT/..\"\nBUILD_DIR=\"$REPO_ROOT/build\"\nif [ ! -d \"$BUILD_DIR\" ] || [ ! -f \"$BUILD_DIR/CMakeCache.txt\" ]; then\n  cmake -G Xcode -S \"$REPO_ROOT\" -B \"$BUILD_DIR\"\nfi\n/usr/bin/xcodebuild -project \"$BUILD_DIR/MightyMike.xcodeproj\" -scheme MightyMike -configuration \"$CONFIGURATION\" build\n";
+        };
+        DDBE83712B5A000100000001 /* ShellScript */ = {
+            isa = PBXShellScriptBuildPhase;
+            buildActionMask = 2147483647;
+            files = (
+            );
+            inputFileListPaths = (
+            );
+            inputPaths = (
+            );
+            name = ShellScript;
+            outputFileListPaths = (
+            );
+            outputPaths = (
+            );
+            runOnlyForDeploymentPostprocessing = 0;
+            shellPath = /bin/sh;
+            shellScript = "set -e\nREPO_ROOT=\"$SRCROOT/..\"\nBUILD_DIR=\"$REPO_ROOT/build\"\ncmake -G Xcode -S \"$REPO_ROOT\" -B \"$BUILD_DIR\" -DBUILD_EDITOR_ONLY=ON || true\n/usr/bin/xcodebuild -project \"$BUILD_DIR/MightyMike.xcodeproj\" -scheme MMLevelEditor -configuration \"$CONFIGURATION\" build\n";
+        };
+/* End PBXShellScriptBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+        DDBE83622B59FFFA00000001 /* Debug */ = {
+            isa = XCBuildConfiguration;
+            buildSettings = {
+                PRODUCT_NAME = CMakeDriver;
+            };
+            name = Debug;
+        };
+        DDBE83632B59FFFA00000001 /* Release */ = {
+            isa = XCBuildConfiguration;
+            buildSettings = {
+                PRODUCT_NAME = CMakeDriver;
+            };
+            name = Release;
+        };
+        DDBE83732B5A000100000001 /* Debug */ = {
+            isa = XCBuildConfiguration;
+            buildSettings = {
+                PRODUCT_NAME = "Build Game (CMake)";
+            };
+            name = Debug;
+        };
+        DDBE83742B5A000100000001 /* Release */ = {
+            isa = XCBuildConfiguration;
+            buildSettings = {
+                PRODUCT_NAME = "Build Game (CMake)";
+            };
+            name = Release;
+        };
+        DDBE83772B5A000100000001 /* Debug */ = {
+            isa = XCBuildConfiguration;
+            buildSettings = {
+                PRODUCT_NAME = "Build Editor (CMake)";
+            };
+            name = Debug;
+        };
+        DDBE83782B5A000100000001 /* Release */ = {
+            isa = XCBuildConfiguration;
+            buildSettings = {
+                PRODUCT_NAME = "Build Editor (CMake)";
+            };
+            name = Release;
+        };
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+        DDBE83612B59FFFA00000001 /* Build configuration list for PBXProject "CMakeDriver" */ = {
+            isa = XCConfigurationList;
+            buildConfigurations = (
+                DDBE83622B59FFFA00000001 /* Debug */,
+                DDBE83632B59FFFA00000001 /* Release */,
+            );
+            defaultConfigurationIsVisible = 0;
+            defaultConfigurationName = Debug;
+        };
+        DDBE83752B5A000100000001 /* Build configuration list for PBXAggregateTarget "Build Game (CMake)" */ = {
+            isa = XCConfigurationList;
+            buildConfigurations = (
+                DDBE83732B5A000100000001 /* Debug */,
+                DDBE83742B5A000100000001 /* Release */,
+            );
+            defaultConfigurationIsVisible = 0;
+            defaultConfigurationName = Debug;
+        };
+        DDBE83762B5A000100000001 /* Build configuration list for PBXAggregateTarget "Build Editor (CMake)" */ = {
+            isa = XCConfigurationList;
+            buildConfigurations = (
+                DDBE83772B5A000100000001 /* Debug */,
+                DDBE83782B5A000100000001 /* Release */,
+            );
+            defaultConfigurationIsVisible = 0;
+            defaultConfigurationName = Debug;
+        };
+/* End XCConfigurationList section */
+
+	};
+	rootObject = DDBE83602B59FFFA00000001 /* Project object */;
+}

@@ -3,27 +3,48 @@
 
 #import <Cocoa/Cocoa.h>
 
-// Pull in game headers
+// Forward-declare minimal engine APIs to avoid pulling Pomme types into this ObjC++ file
 extern "C" {
-#include "myglobals.h"
-#include "externs.h"
-#include "playfield.h"
-#include "picture.h"
-#include "misc.h"
+    void LoadTileSet(const char* filename);
+    void DisposeCurrentMapData(void);
+    void LoadPlayfield(const char* filename);
+    void UpdateTileAnimation(void);
+    void BuildItemList(void);
+    void* LoadTGA(const char* path, bool loadPalette, int* outWidth, int* outHeight);
+    extern void* gPlayfieldHandle;
 }
 
-// Pull in Pomme to set gDataSpec
-#import <PommeInit.h>
-#import <PommeFiles.h>
+#import "EditorBridge.h"
 #import "MMTilePaletteView.h"
 #import <objc/runtime.h>
 
 @interface AppDelegate ()
 @property (strong) NSURL *currentMapURL;
 @property (assign) int32_t offsetToMapImage;
+@property (assign) int32_t offsetToAltMap;
+@property (assign) int32_t offsetToObjectList;
 @end
 
 @implementation AppDelegate
+
+static char kAttrBoxesKeyStorage;
+
+// Tile attribute bit constants (mirror of playfield.h)
+#ifndef TILE_ATTRIB_TOPSOLID
+#define TILE_ATTRIB_TOPSOLID        1
+#define TILE_ATTRIB_BOTTOMSOLID     (1<<1)
+#define TILE_ATTRIB_LEFTSOLID       (1<<2)
+#define TILE_ATTRIB_RIGHTSOLID      (1<<3)
+#define TILE_ATTRIB_DEATH           (1<<4)
+#define TILE_ATTRIB_HURT            (1<<5)
+#define TILE_ATTRIB_WATER           (1<<7)
+#define TILE_ATTRIB_WIND            (1<<8)
+#define TILE_ATTRIB_BULLETGOESTHRU  (1<<9)
+#define TILE_ATTRIB_STAIRS          (1<<10)
+#define TILE_ATTRIB_FRICTION        (1<<11)
+#define TILE_ATTRIB_ICE             (1<<12)
+#define TILE_ATTRIB_TRACK           (1<<15)
+#endif
 
 - (void)applicationDidFinishLaunching:(NSNotification *)notification
 {
@@ -35,16 +56,15 @@ extern "C" {
 
     // Simple animation timer for tile anim preview
     self.animTimer = [NSTimer scheduledTimerWithTimeInterval:0.2 repeats:YES block:^(__unused NSTimer* t){
-        gFrames++;
-        UpdateTileAnimation();
+        EB_AdvanceAnimation();
         [self.paletteView setNeedsDisplay:YES];
-        [self.mapView setNeedsDisplay:YES];
+        [self.mapView reloadBitmap];
     }];
 }
 
 - (void)setupPommeAndDataSpec
 {
-    Pomme::Init();
+    EB_InitPomme();
 
     // Try to locate Data folder relative to this app bundle
     NSString* exePath = [[NSBundle mainBundle] executablePath];
@@ -69,9 +89,8 @@ extern "C" {
     }
 
     // Set gDataSpec to Data/System so colon paths work
-    auto dataSystem = (dataURL.path.stringByStandardizingPath).stringByAppendingPathComponent(@"System");
-    FSSpec dataSpec = Pomme::Files::HostPathToFSSpec(std::string([dataSystem fileSystemRepresentation]));
-    gDataSpec = dataSpec;
+    NSString* dataSystem = [[dataURL.path stringByStandardizingPath] stringByAppendingPathComponent:@"System"];
+    EB_SetDataSpecFromHostPath([dataSystem fileSystemRepresentation]);
 }
 
 - (void)setupUI
@@ -120,12 +139,22 @@ extern "C" {
     saveBtn.target = self; saveBtn.action = @selector(onSaveAs:);
     [controls addSubview:saveBtn];
 
-    self.toolSeg = [[NSSegmentedControl alloc] initWithFrame:NSMakeRect(176, 2, 220, 24)];
+    self.toolSeg = [[NSSegmentedControl alloc] initWithFrame:NSMakeRect(176, 2, 260, 24)];
     self.toolSeg.segmentCount = 7;
     NSArray* labels = @[ @"Tile", @"Select", @"Fill", @"Line", @"Item", @"Alt", @"Attr" ];
     for (NSInteger i=0;i<7;i++){ [self.toolSeg setLabel:labels[i] forSegment:i]; }
     self.toolSeg.target = self; self.toolSeg.action = @selector(onToolChanged:);
     [controls addSubview:self.toolSeg];
+
+    self.undoButton = [[NSButton alloc] initWithFrame:NSMakeRect(440, 2, 60, 24)];
+    self.undoButton.title = @"Undo"; self.undoButton.bezelStyle = NSBezelStyleRounded;
+    [self.undoButton setTarget:self]; self.undoButton.action = @selector(onUndo:);
+    [controls addSubview:self.undoButton];
+
+    self.redoButton = [[NSButton alloc] initWithFrame:NSMakeRect(504, 2, 60, 24)];
+    self.redoButton.title = @"Redo"; self.redoButton.bezelStyle = NSBezelStyleRounded;
+    [self.redoButton setTarget:self]; self.redoButton.action = @selector(onRedo:);
+    [controls addSubview:self.redoButton];
 
     // Tile palette on left
     self.paletteView = [[MMTilePaletteView alloc] initWithFrame:NSMakeRect(0, 40, 240, content.bounds.size.height-40)];
@@ -148,25 +177,44 @@ extern "C" {
     [leftPane addSubview:self.tileField];
 
     self.altPopup = [[NSPopUpButton alloc] initWithFrame:NSMakeRect(110,6,122,24) pullsDown:NO];
-    [self.altPopup addItemsWithTitles:@[@"Alt: None", @"Up", @"Right", @"Down", @"Left" ]];
+    [self.altPopup addItemsWithTitles:@[@"Alt: None", @"Up", @"Right", @"Down", @"Left", @"Up-Right", @"Down-Right", @"Down-Left", @"Left-Up", @"Stop", @"Loop" ]];
     self.altPopup.target = self; self.altPopup.action = @selector(onAltChanged:);
     [leftPane addSubview:self.altPopup];
 
     // Item editor controls
-    NSTextField* itemLbl = [[NSTextField alloc] initWithFrame:NSMakeRect(4, content.bounds.size.height-170, 60, 18)];
+    NSTextField* itemLbl = [[NSTextField alloc] initWithFrame:NSMakeRect(4, content.bounds.size.height-220, 60, 18)];
     itemLbl.stringValue = @"Item:"; itemLbl.editable=NO; itemLbl.bezeled=NO; itemLbl.drawsBackground=NO;
     itemLbl.autoresizingMask = NSViewMinYMargin;
     [leftPane addSubview:itemLbl];
-    self.itemTypeField = [[NSTextField alloc] initWithFrame:NSMakeRect(60, content.bounds.size.height-172, 60, 22)];
+
+    self.itemCategoryPopup = [[NSPopUpButton alloc] initWithFrame:NSMakeRect(60, content.bounds.size.height-222, 172, 24) pullsDown:NO];
+    self.itemCategoryPopup.autoresizingMask = NSViewMinYMargin;
+    [self.itemCategoryPopup addItemsWithTitles:@[@"Keys", @"Doors", @"Pickups", @"Enemies", @"Special"]];
+    [self.itemCategoryPopup setTarget:self]; self.itemCategoryPopup.action = @selector(onItemCategoryChanged:);
+    [leftPane addSubview:self.itemCategoryPopup];
+
+    self.itemTypePopup = [[NSPopUpButton alloc] initWithFrame:NSMakeRect(4, content.bounds.size.height-196, 228, 24) pullsDown:NO];
+    self.itemTypePopup.autoresizingMask = NSViewMinYMargin;
+    [self.itemTypePopup setTarget:self]; self.itemTypePopup.action = @selector(onItemTypeChanged:);
+    [leftPane addSubview:self.itemTypePopup];
+
+    self.itemTypeField = [[NSTextField alloc] initWithFrame:NSMakeRect(4, content.bounds.size.height-172, 228, 22)];
+    self.itemTypeField.placeholderString = @"Type # (override dropdown)";
     self.itemTypeField.autoresizingMask = NSViewMinYMargin;
     [leftPane addSubview:self.itemTypeField];
     NSArray* pl = @[ @"p0:", @"p1:", @"p2:", @"p3:" ];
-    NSArray** fieldsPtr = NULL;
-    self.itemParm0 = [[NSTextField alloc] initWithFrame:NSMakeRect(4, content.bounds.size.height-194, 54, 20)];
-    self.itemParm1 = [[NSTextField alloc] initWithFrame:NSMakeRect(64, content.bounds.size.height-194, 54, 20)];
-    self.itemParm2 = [[NSTextField alloc] initWithFrame:NSMakeRect(124, content.bounds.size.height-194, 54, 20)];
-    self.itemParm3 = [[NSTextField alloc] initWithFrame:NSMakeRect(184, content.bounds.size.height-194, 54, 20)];
+    // no-op placeholder removed
+    self.itemParm0 = [[NSTextField alloc] initWithFrame:NSMakeRect(4, content.bounds.size.height-148, 54, 20)];
+    self.itemParm1 = [[NSTextField alloc] initWithFrame:NSMakeRect(64, content.bounds.size.height-148, 54, 20)];
+    self.itemParm2 = [[NSTextField alloc] initWithFrame:NSMakeRect(124, content.bounds.size.height-148, 54, 20)];
+    self.itemParm3 = [[NSTextField alloc] initWithFrame:NSMakeRect(184, content.bounds.size.height-148, 54, 20)];
     for (NSTextField* f in @[self.itemParm0,self.itemParm1,self.itemParm2,self.itemParm3]) { f.autoresizingMask=NSViewMinYMargin; [leftPane addSubview:f]; }
+
+    // Seed item types
+    if ([self respondsToSelector:@selector(onItemCategoryChanged:)])
+    {
+        [self performSelector:@selector(onItemCategoryChanged:) withObject:self.itemCategoryPopup];
+    }
 
     // Minimal attribute editor below palette
     NSView* attrPanel = [[NSView alloc] initWithFrame:NSMakeRect(0, content.bounds.size.height-140, 240, 140)];
@@ -184,7 +232,7 @@ extern "C" {
     [applyAttr setTarget:self];
     [applyAttr setAction:@selector(onApplyAttr:)];
     [attrPanel addSubview:applyAttr];
-    objc_setAssociatedObject(self, @"attrBoxes", boxes, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+    objc_setAssociatedObject(self, &kAttrBoxesKeyStorage, boxes, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
 }
 
 - (void)onTileChanged:(id)sender
@@ -193,6 +241,7 @@ extern "C" {
     if (t < 0) t = 0;
     if (t > 2047) t = 2047; // TILENUM_MASK is 11 bits
     self.mapView.selectedTile = t;
+    [self updateAttrPanelForTile:t];
 }
 
 - (void)onAltChanged:(id)sender
@@ -203,34 +252,61 @@ extern "C" {
 - (void)onApplyAttr:(id)sender
 {
     NSInteger tile = self.tileField.integerValue;
-    int count=0; TileAttribType* at = MM_GetTileAttribs(&count);
-    if (!at || tile<0 || tile>=count) return;
-    TileAttribType t = at[tile];
-    t.bits = 0;
-    NSArray* boxes = objc_getAssociatedObject(self, @"attrBoxes");
+    if (tile < 0) return;
+    uint16_t bits = 0;
+    static const void* kAttrBoxesKey = &kAttrBoxesKey;
+    NSArray* boxes = (NSArray*)objc_getAssociatedObject(self, kAttrBoxesKey);
     for (NSButton* cb in boxes)
     {
         if (cb.state == NSControlStateValueOn)
         {
             switch (cb.tag)
             {
-                case 0: t.bits |= TILE_ATTRIB_TOPSOLID; break;
-                case 1: t.bits |= TILE_ATTRIB_BOTTOMSOLID; break;
-                case 2: t.bits |= TILE_ATTRIB_LEFTSOLID; break;
-                case 3: t.bits |= TILE_ATTRIB_RIGHTSOLID; break;
-                case 4: t.bits |= TILE_ATTRIB_DEATH; break;
-                case 5: t.bits |= TILE_ATTRIB_HURT; break;
-                case 6: t.bits |= TILE_ATTRIB_WATER; break;
-                case 7: t.bits |= TILE_ATTRIB_WIND; break;
-                case 8: t.bits |= TILE_ATTRIB_BULLETGOESTHRU; break;
-                case 9: t.bits |= TILE_ATTRIB_STAIRS; break;
-                case 10: t.bits |= TILE_ATTRIB_FRICTION; break;
-                case 11: t.bits |= TILE_ATTRIB_ICE; break;
-                case 12: t.bits |= TILE_ATTRIB_TRACK; break;
+                case 0: bits |= TILE_ATTRIB_TOPSOLID; break;
+                case 1: bits |= TILE_ATTRIB_BOTTOMSOLID; break;
+                case 2: bits |= TILE_ATTRIB_LEFTSOLID; break;
+                case 3: bits |= TILE_ATTRIB_RIGHTSOLID; break;
+                case 4: bits |= TILE_ATTRIB_DEATH; break;
+                case 5: bits |= TILE_ATTRIB_HURT; break;
+                case 6: bits |= TILE_ATTRIB_WATER; break;
+                case 7: bits |= TILE_ATTRIB_WIND; break;
+                case 8: bits |= TILE_ATTRIB_BULLETGOESTHRU; break;
+                case 9: bits |= TILE_ATTRIB_STAIRS; break;
+                case 10: bits |= TILE_ATTRIB_FRICTION; break;
+                case 11: bits |= TILE_ATTRIB_ICE; break;
+                case 12: bits |= TILE_ATTRIB_TRACK; break;
             }
         }
     }
-    MM_SetTileAttrib((int)tile, &t);
+    EB_SetTileAttribBits((int)tile, bits);
+}
+
+- (void)updateAttrPanelForTile:(NSInteger)tile
+{
+    if (tile < 0) return;
+    uint16_t bits = EB_GetTileAttribBits((int)tile);
+    NSArray* boxes = (NSArray*)objc_getAssociatedObject(self, &kAttrBoxesKeyStorage);
+    for (NSButton* cb in boxes)
+    {
+        uint16_t bit=0;
+        switch (cb.tag)
+        {
+            case 0: bit = TILE_ATTRIB_TOPSOLID; break;
+            case 1: bit = TILE_ATTRIB_BOTTOMSOLID; break;
+            case 2: bit = TILE_ATTRIB_LEFTSOLID; break;
+            case 3: bit = TILE_ATTRIB_RIGHTSOLID; break;
+            case 4: bit = TILE_ATTRIB_DEATH; break;
+            case 5: bit = TILE_ATTRIB_HURT; break;
+            case 6: bit = TILE_ATTRIB_WATER; break;
+            case 7: bit = TILE_ATTRIB_WIND; break;
+            case 8: bit = TILE_ATTRIB_BULLETGOESTHRU; break;
+            case 9: bit = TILE_ATTRIB_STAIRS; break;
+            case 10: bit = TILE_ATTRIB_FRICTION; break;
+            case 11: bit = TILE_ATTRIB_ICE; break;
+            case 12: bit = TILE_ATTRIB_TRACK; break;
+        }
+        cb.state = (bits & bit) ? NSControlStateValueOn : NSControlStateValueOff;
+    }
 }
 
 - (void)onToolChanged:(id)sender
@@ -258,8 +334,7 @@ extern "C" {
     sp.nameFieldStringValue = self.currentMapURL.lastPathComponent;
     if ([sp runModal] != NSModalResponseOK) return;
 
-    // Update tile matrix back into packed buffer and write PACK_TYPE_NONE
-    [self writePackedMapToURL:sp.URL];
+    EB_SaveMapToPath(sp.URL.fileSystemRepresentation);
 }
 
 - (void)loadMapAtURL:(NSURL*)mapURL
@@ -294,63 +369,21 @@ extern "C" {
     }
     else
     {
-        // Fallback: load via raw file API
-        // Read file bytes, unpack using LoadPackedFile via temporary override of gDataSpec
-        // Simplify: create a temporary symlink in Data/Maps and load from there
-        NSString* tempName = mapURL.lastPathComponent;
-        NSString* dataMaps = [[[NSString stringWithUTF8String:Pomme::Files::FSSpecToHostPath(gDataSpec).c_str()] stringByDeletingLastPathComponent] stringByAppendingPathComponent:@"Maps"]; 
-        NSString* tempPath = [dataMaps stringByAppendingPathComponent:tempName];
-        [[NSFileManager defaultManager] removeItemAtPath:tempPath error:nil];
-        [[NSFileManager defaultManager] copyItemAtPath:mapPath toPath:tempPath error:nil];
-        DisposeCurrentMapData();
-        NSString* colon = [@":Maps:" stringByAppendingString:tempName];
-        LoadPlayfield(colon.UTF8String);
+        // For now, only maps under Data/Maps are supported directly.
+        return;
     }
 
-    // Remember offset to MAP_IMAGE so we can save later
-    Ptr pfPtr = *gPlayfieldHandle;
-    self.offsetToMapImage = UnpackI32BEInPlace(pfPtr + 2);
+    // Offsets managed internally by EditorBridge when saving
+
+    // Build item list for editing
+    BuildItemList();
 
     [self.mapView reloadBitmap];
     [self.paletteView updateSize];
     [self.window setTitle:[NSString stringWithFormat:@"Level Editor — %@", name]];
 }
 
-- (void)writePackedMapToURL:(NSURL*)outURL
-{
-    if (!gPlayfieldHandle) return;
-
-    // Update big-endian tile numbers back into the underlying buffer
-    uint16_t* tempPtr = (uint16_t*)((*gPlayfieldHandle) + self.offsetToMapImage);
-    // width/height already there
-    int w = gPlayfieldTileWidth;
-    int h = gPlayfieldTileHeight;
-    tempPtr += 2; // skip width/height
-    for (int y=0; y<h; y++)
-    {
-        for (int x=0; x<w; x++)
-        {
-            uint16_t v = gPlayfield[y][x];
-            // Write as big-endian
-            uint16_t be = ((v & 0xFF) << 8) | ((v >> 8) & 0xFF);
-            *tempPtr++ = be;
-        }
-    }
-
-    // Write PACK_TYPE_NONE header + payload
-    FILE* f = fopen(outURL.path.fileSystemRepresentation, "wb");
-    if (!f) return;
-    uint32_t decompSize = (uint32_t) GetHandleSize(gPlayfieldHandle);
-    uint32_t type = 2; // PACK_TYPE_NONE
-    // write big-endian
-    uint8_t hdr[8] = {
-        (uint8_t)((decompSize>>24)&0xFF), (uint8_t)((decompSize>>16)&0xFF), (uint8_t)((decompSize>>8)&0xFF), (uint8_t)(decompSize&0xFF),
-        (uint8_t)((type>>24)&0xFF), (uint8_t)((type>>16)&0xFF), (uint8_t)((type>>8)&0xFF), (uint8_t)(type&0xFF)
-    };
-    fwrite(hdr, 1, 8, f);
-    fwrite(*gPlayfieldHandle, 1, decompSize, f);
-    fclose(f);
-}
+// Saving handled in EditorBridge
 
 @end
 
@@ -364,5 +397,55 @@ extern "C" {
 {
     self.mapView.selectedTile = tileIndex;
     self.tileField.integerValue = tileIndex;
+    self.paletteView.selectedTile = tileIndex;
+    [self.paletteView setNeedsDisplay:YES];
 }
+
+- (void)onUndo:(id)sender { [self.mapView undo]; }
+- (void)onRedo:(id)sender { [self.mapView redo]; }
+@end
+
+#pragma mark - Items
+
+@interface AppDelegate (Items)
+@end
+
+@implementation AppDelegate (Items)
+
+- (void)onItemCategoryChanged:(id)sender
+{
+    // Populate itemTypePopup based on category
+    [self.itemTypePopup removeAllItems];
+    switch (self.itemCategoryPopup.indexOfSelectedItem)
+    {
+        case 0: // Keys
+            [self.itemTypePopup addItemsWithTitles:@[@"Key (19)", @"KeyColor (55)"]];
+            break;
+        case 1: // Doors
+            [self.itemTypePopup addItemsWithTitles:@[@"Clown Door (20)", @"Candy Door (22)", @"Jurassic Door (31)", @"Fairy Door (44)", @"Bargain Door (52)"]];
+            break;
+        case 2: // Pickups
+            [self.itemTypePopup addItemsWithTitles:@[@"Health (15)", @"Weapon Powerup (33)", @"Misc Powerup (34)", @"Gumball (35)", @"Ship POW (49)", @"Star (23)"]];
+            break;
+        case 3: // Enemies (subset)
+            [self.itemTypePopup addItemsWithTitles:@[@"Caveman (0)", @"Baby Dino (8)", @"Rex (9)", @"Clown (13)", @"FlowerClown (16)", @"ChocBunny (24)", @"GBear (28)", @"Carmel (32)", @"LemonDrop (36)", @"Giant (37)", @"Dragon (38)", @"Witch (39)", @"BBWolf (40)", @"Soldier (41)", @"Spider (43)", @"Battery (45)", @"Slinky (47)", @"8Ball (48)", @"Robot (50)", @"Doggy (51)", @"Top (53)"]];
+            break;
+        default: // Special
+            [self.itemTypePopup addItemsWithTitles:@[@"Teleport (17)", @"RaceCar (18)", @"MagicHat (14)"]];
+            break;
+    }
+    [self onItemTypeChanged:self.itemTypePopup];
+}
+
+- (void)onItemTypeChanged:(id)sender
+{
+    NSString* title = self.itemTypePopup.selectedItem.title;
+    NSRange r = [title rangeOfString:@"(" options:NSBackwardsSearch];
+    if (r.location != NSNotFound)
+    {
+        NSInteger num = [[title substringFromIndex:r.location+1] integerValue];
+        self.itemTypeField.integerValue = num;
+    }
+}
+
 @end
