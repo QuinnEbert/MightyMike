@@ -6,6 +6,7 @@ cache/
 
 # Build directories
 /build*/
+Xcode/build/
 /cmake-build*/
 /out/
 /dist/
@@ -18,4 +19,3 @@ cache/
 
 # macOS metadata
 .DS_Store
-
