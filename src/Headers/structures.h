@@ -302,10 +302,10 @@ struct PrefsType
 	Boolean		gameTitlePowerPete;
 	Boolean		thermometerScreen;
 	Boolean		debugInfoInTitleBar;
-	Boolean		colorCorrection;
-	KeyBinding	keys[NUM_CONTROL_NEEDS];
+    Boolean		colorCorrection;
+    Boolean		autoFireSingleShots;   // hold-to-fire for single-shot weapons
+    KeyBinding	keys[NUM_CONTROL_NEEDS];
 };
 typedef struct PrefsType PrefsType;
 
-#define PREFS_MAGIC "Mighty Mike Prefs v5"
-
+#define PREFS_MAGIC "Mighty Mike Prefs v6"

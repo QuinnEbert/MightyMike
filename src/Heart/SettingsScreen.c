@@ -298,13 +298,23 @@ static MenuItem gAudioMenu[] =
 
 static MenuItem gPresentationMenu[] =
 {
-	{ .type = kMenuItem_Label, .label = " PRESENTATION   SETTINGS" },
-	{ .type = kMenuItem_Separator },
-	{
-		.type = kMenuItem_Cycler, .cycler =
-		{
-			.caption = "game title",
-			.callback = nil,
+    { .type = kMenuItem_Label, .label = " PRESENTATION   SETTINGS" },
+    { .type = kMenuItem_Separator },
+    {
+        .type = kMenuItem_Cycler, .cycler =
+        {
+            .caption = "hold-to-fire (single-shot)",
+            .callback = nil,
+            .valuePtr = &gGamePrefs.autoFireSingleShots,
+            .numChoices = 2,
+            .choices = { "off", "every 0.75 s" },
+        }
+    },
+    {
+        .type = kMenuItem_Cycler, .cycler =
+        {
+            .caption = "game title",
+            .callback = nil,
 			.valuePtr = &gGamePrefs.gameTitlePowerPete,
 			.numChoices = 2,
 			.choices = { "mighty mike", "power pete" },
@@ -1347,4 +1357,3 @@ void ApplyPrefs(void)
 	OnChangeIntegerScaling();
 	SetPaletteColorCorrection();
 }
-

@@ -127,3 +127,7 @@ void	FindHeatSeekTarget(ObjNode *);
 void	MoveHeatSeek(void);
 Boolean	ShootPixieDust(void);
 void	MovePixieDust(void);
+
+// Auto-fire for single-shot weapons
+#define SINGLESHOT_AUTOFIRE_INTERVAL (GAME_FPS*3/4)
+extern long gLastSingleShotFrame;

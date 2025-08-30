@@ -53,6 +53,7 @@ Byte		gNumWeaponsIHave,gCurrentWeaponIndex;
 Byte		gCurrentWeaponType;
 Byte		gNumBullets;
 long		gOozieTick = 0;
+long		gLastSingleShotFrame = 0;
 
 
 				/* WEAPON SHOOT JUMPTABLE */
@@ -620,8 +621,11 @@ short		z,y,x;
 
 				/* SEE IF READY TO SHOOT */
 
-	if (!GetNewNeedState(kNeed_Attack))					// see if fire button pressed
-		return false;
+    // Fire on new press, or (optionally) auto-fire while held at fixed interval
+    if (!(GetNewNeedState(kNeed_Attack)
+        || (gGamePrefs.autoFireSingleShots && GetNeedState(kNeed_Attack)
+            && (gFrames - gLastSingleShotFrame) >= SINGLESHOT_AUTOFIRE_INTERVAL)))
+        return false;
 
 			/* SEE WHICH WAY TO MAKE IT GO */
 
@@ -658,7 +662,8 @@ short		z,y,x;
 
 	PlaySound(SOUND_SUCKPOP);
 
-	DrawMyGun();												// make sure I'm doing correct anim
+    gLastSingleShotFrame = gFrames;
+    DrawMyGun();												// make sure I'm doing correct anim
 	return(true);
 }
 
@@ -684,8 +689,10 @@ short		z,y,x;
 
 				/* SEE IF READY TO SHOOT */
 
-	if (!GetNewNeedState(kNeed_Attack))					// see if fire button pressed
-		return false;
+    if (!(GetNewNeedState(kNeed_Attack)
+        || (gGamePrefs.autoFireSingleShots && GetNeedState(kNeed_Attack)
+            && (gFrames - gLastSingleShotFrame) >= SINGLESHOT_AUTOFIRE_INTERVAL)))
+        return false;
 
 
 			/* SEE WHICH WAY TO MAKE IT GO */
@@ -911,9 +918,10 @@ short		z,y,x;
 
 	gNumBullets++;
 
-	PlaySound(SOUND_RUBBERGUN);
+    PlaySound(SOUND_RUBBERGUN);
 
-	DrawMyGun();												// make sure I'm doing correct anim
+    gLastSingleShotFrame = gFrames;
+    DrawMyGun();												// make sure I'm doing correct anim
 	return(true);
 }
 

@@ -1275,6 +1275,7 @@ static void InitDefaultPrefs(void)
 	gGamePrefs.thermometerScreen = false;
 	gGamePrefs.debugInfoInTitleBar = false;
 	gGamePrefs.colorCorrection = true;
+	gGamePrefs.autoFireSingleShots = false; // default off
 	SDL_memcpy(gGamePrefs.keys, kDefaultKeyBindings, sizeof(kDefaultKeyBindings));
 }
 
@@ -1445,4 +1446,3 @@ loop:
 
 	goto loop;								// go back to main menu
 }
-
