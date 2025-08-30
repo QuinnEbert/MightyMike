@@ -70,6 +70,8 @@ long	PF_WINDOW_LEFT	=	24;				// left MUST be on 4 pixel boundary!!!!!
 static	Handle			gTileSetHandle = nil;
 static	Ptr				gTilesPtr;
 static	short			*gTileXlatePtr;
+static int gNumXlateEntries = 0;
+static int gNumTileAttributeEntries = 0;
 
 Handle			gPlayfieldHandle = nil;
 uint16_t		**gPlayfield = nil;
@@ -273,8 +275,8 @@ int16_t* tileXparentList		= nil;
 			/* GET ENTRY COUNTS */
 
 	/*int numTileDefinitions		=*/   UnpackI16BEInPlace(tileSetPtr + offsetToTileDefinitions			- 2	);
-	int numXlateEntries					= UnpackI16BEInPlace(tileSetPtr + offsetToXlateTable				- 2	);
-	int numTileAttributeEntries			= UnpackI16BEInPlace(tileSetPtr + offsetToTileAttributes			- 2	);
+    gNumXlateEntries					= UnpackI16BEInPlace(tileSetPtr + offsetToXlateTable				- 2	);
+    gNumTileAttributeEntries			= UnpackI16BEInPlace(tileSetPtr + offsetToTileAttributes			- 2	);
 	gNumTileAnims						= UnpackI16BEInPlace(tileSetPtr + offsetToTileAnimList			- 2	);
 	int numTileXparentColors			= UnpackI16BEInPlace(tileSetPtr + offsetToTileXparentColorList	- 2	);
 
@@ -289,10 +291,10 @@ int16_t* tileXparentList		= nil;
 			/* BYTESWAP STUFF */
 
 	// Byteswap gTileXlatePtr
-	UnpackIntsBE(2, numXlateEntries, gTileXlatePtr);
+    UnpackIntsBE(2, gNumXlateEntries, gTileXlatePtr);
 
 	// Byteswap gTileAttributes
-	UnpackStructs(">Hh4b", sizeof(TileAttribType), numTileAttributeEntries, gTileAttributes);
+    UnpackStructs(">Hh4b", sizeof(TileAttribType), gNumTileAttributeEntries, gTileAttributes);
 
 	// Byteswap tileXparentList
 	UnpackIntsBE(2, numTileXparentColors, tileXparentList);
@@ -456,6 +458,42 @@ Ptr		bytePtr,pfPtr;
 	gTweenedScrollX = 0;
 	gTweenedScrollY = 0;
 }
+
+//======================== Editor accessors (for tools) ========================
+
+int MM_GetNumTiles(void)
+{
+    return gNumXlateEntries;
+}
+
+const uint8_t* MM_GetTilePixelsForTile(int tileIndex)
+{
+    if (tileIndex < 0 || tileIndex >= gNumXlateEntries)
+        return NULL;
+    int xlate = gTileXlatePtr[tileIndex & TILENUM_MASK];
+    return (const uint8_t*)(gTilesPtr + (xlate << (TILE_SIZE_SH*2)));
+}
+
+Byte* MM_GetAltMapRowPtr(int row)
+{
+    if (!gAlternateMap) return NULL;
+    if (row < 0 || row >= gPlayfieldTileHeight) return NULL;
+    return gAlternateMap[row];
+}
+
+TileAttribType* MM_GetTileAttribs(int* outCount)
+{
+    if (outCount) *outCount = gNumTileAttributeEntries;
+    return gTileAttributes;
+}
+
+void MM_SetTileAttrib(int index, const TileAttribType* a)
+{
+    if (!gTileAttributes) return;
+    if (index < 0 || index >= gNumTileAttributeEntries) return;
+    gTileAttributes[index] = *a;
+}
+
 
 
 /*************** INIT PLAYFIELD *******************/
@@ -1637,4 +1675,3 @@ unsigned long 	origRow,origCol;
 		}
 	}
 }
-

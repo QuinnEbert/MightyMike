@@ -15,6 +15,8 @@ extern "C" {
 // Pull in Pomme to set gDataSpec
 #import <PommeInit.h>
 #import <PommeFiles.h>
+#import "MMTilePaletteView.h"
+#import <objc/runtime.h>
 
 @interface AppDelegate ()
 @property (strong) NSURL *currentMapURL;
@@ -30,6 +32,14 @@ extern "C" {
 
     // Load a default palette so tiles have colors
     LoadTGA(":Images:overheadmap.tga", true, NULL, NULL);
+
+    // Simple animation timer for tile anim preview
+    self.animTimer = [NSTimer scheduledTimerWithTimeInterval:0.2 repeats:YES block:^(__unused NSTimer* t){
+        gFrames++;
+        UpdateTileAnimation();
+        [self.paletteView setNeedsDisplay:YES];
+        [self.mapView setNeedsDisplay:YES];
+    }];
 }
 
 - (void)setupPommeAndDataSpec
@@ -73,14 +83,21 @@ extern "C" {
     [self.window setTitle:@"Mighty Mike Level Editor (Basic)"]; 
     [self.window makeKeyAndOrderFront:nil];
 
-    // Scroll view with map view
+    // Left palette area
+    NSView* content = self.window.contentView;
+    NSView* leftPane = [[NSView alloc] initWithFrame:NSMakeRect(0, 0, 240, content.bounds.size.height)];
+    leftPane.autoresizingMask = NSViewHeightSizable;
+    [content addSubview:leftPane];
+
+    // Right map scroll view fills remaining
+    NSRect mapRect = NSMakeRect(240, 0, content.bounds.size.width-240, content.bounds.size.height);
     self.mapView = [[MMMapView alloc] initWithFrame:NSMakeRect(0,0,800,600)];
-    self.scrollView = [[NSScrollView alloc] initWithFrame:self.window.contentView.bounds];
+    self.scrollView = [[NSScrollView alloc] initWithFrame:mapRect];
     self.scrollView.autoresizingMask = NSViewWidthSizable | NSViewHeightSizable;
     self.scrollView.hasVerticalScroller = YES;
     self.scrollView.hasHorizontalScroller = YES;
     self.scrollView.documentView = self.mapView;
-    [self.window.contentView addSubview:self.scrollView];
+    [content addSubview:self.scrollView];
 
     // Simple toolbar-like controls
     NSView* controls = [[NSView alloc] initWithFrame:NSMakeRect(0, 0, 300, 28)];
@@ -103,14 +120,71 @@ extern "C" {
     saveBtn.target = self; saveBtn.action = @selector(onSaveAs:);
     [controls addSubview:saveBtn];
 
-    NSTextField* tileLbl = [[NSTextField alloc] initWithFrame:NSMakeRect(176,4,50,20)];
-    tileLbl.stringValue = @"Tile:"; tileLbl.editable = NO; tileLbl.bezeled = NO; tileLbl.drawsBackground = NO; tileLbl.alignment = NSTextAlignmentRight;
-    [controls addSubview:tileLbl];
+    self.toolSeg = [[NSSegmentedControl alloc] initWithFrame:NSMakeRect(176, 2, 220, 24)];
+    self.toolSeg.segmentCount = 7;
+    NSArray* labels = @[ @"Tile", @"Select", @"Fill", @"Line", @"Item", @"Alt", @"Attr" ];
+    for (NSInteger i=0;i<7;i++){ [self.toolSeg setLabel:labels[i] forSegment:i]; }
+    self.toolSeg.target = self; self.toolSeg.action = @selector(onToolChanged:);
+    [controls addSubview:self.toolSeg];
 
-    self.tileField = [[NSTextField alloc] initWithFrame:NSMakeRect(230,2,60,24)];
+    // Tile palette on left
+    self.paletteView = [[MMTilePaletteView alloc] initWithFrame:NSMakeRect(0, 40, 240, content.bounds.size.height-40)];
+    self.paletteView.delegate = (id)self;
+    self.paletteView.columns = 4;
+    self.paletteView.zoom = 1.0;
+    self.paletteScroll = [[NSScrollView alloc] initWithFrame:NSMakeRect(0, 40, 240, content.bounds.size.height-40)];
+    self.paletteScroll.autoresizingMask = NSViewHeightSizable;
+    self.paletteScroll.hasVerticalScroller = YES;
+    self.paletteScroll.documentView = self.paletteView;
+    [leftPane addSubview:self.paletteScroll];
+
+    NSTextField* tileLbl = [[NSTextField alloc] initWithFrame:NSMakeRect(4,8,36,20)];
+    tileLbl.stringValue = @"Tile:"; tileLbl.editable = NO; tileLbl.bezeled = NO; tileLbl.drawsBackground = NO;
+    [leftPane addSubview:tileLbl];
+
+    self.tileField = [[NSTextField alloc] initWithFrame:NSMakeRect(44,6,60,24)];
     self.tileField.stringValue = @"0";
     self.tileField.target = self; self.tileField.action = @selector(onTileChanged:);
-    [controls addSubview:self.tileField];
+    [leftPane addSubview:self.tileField];
+
+    self.altPopup = [[NSPopUpButton alloc] initWithFrame:NSMakeRect(110,6,122,24) pullsDown:NO];
+    [self.altPopup addItemsWithTitles:@[@"Alt: None", @"Up", @"Right", @"Down", @"Left" ]];
+    self.altPopup.target = self; self.altPopup.action = @selector(onAltChanged:);
+    [leftPane addSubview:self.altPopup];
+
+    // Item editor controls
+    NSTextField* itemLbl = [[NSTextField alloc] initWithFrame:NSMakeRect(4, content.bounds.size.height-170, 60, 18)];
+    itemLbl.stringValue = @"Item:"; itemLbl.editable=NO; itemLbl.bezeled=NO; itemLbl.drawsBackground=NO;
+    itemLbl.autoresizingMask = NSViewMinYMargin;
+    [leftPane addSubview:itemLbl];
+    self.itemTypeField = [[NSTextField alloc] initWithFrame:NSMakeRect(60, content.bounds.size.height-172, 60, 22)];
+    self.itemTypeField.autoresizingMask = NSViewMinYMargin;
+    [leftPane addSubview:self.itemTypeField];
+    NSArray* pl = @[ @"p0:", @"p1:", @"p2:", @"p3:" ];
+    NSArray** fieldsPtr = NULL;
+    self.itemParm0 = [[NSTextField alloc] initWithFrame:NSMakeRect(4, content.bounds.size.height-194, 54, 20)];
+    self.itemParm1 = [[NSTextField alloc] initWithFrame:NSMakeRect(64, content.bounds.size.height-194, 54, 20)];
+    self.itemParm2 = [[NSTextField alloc] initWithFrame:NSMakeRect(124, content.bounds.size.height-194, 54, 20)];
+    self.itemParm3 = [[NSTextField alloc] initWithFrame:NSMakeRect(184, content.bounds.size.height-194, 54, 20)];
+    for (NSTextField* f in @[self.itemParm0,self.itemParm1,self.itemParm2,self.itemParm3]) { f.autoresizingMask=NSViewMinYMargin; [leftPane addSubview:f]; }
+
+    // Minimal attribute editor below palette
+    NSView* attrPanel = [[NSView alloc] initWithFrame:NSMakeRect(0, content.bounds.size.height-140, 240, 140)];
+    attrPanel.autoresizingMask = NSViewMinYMargin;
+    [leftPane addSubview:attrPanel];
+    NSArray* bitNames = @[ @"Top", @"Bottom", @"Left", @"Right", @"Death", @"Hurt", @"Water", @"Wind", @"BulletThrough", @"Stairs", @"Friction", @"Ice", @"Track" ];
+    NSMutableArray<NSButton*>* boxes = [NSMutableArray array];
+    for (NSInteger i=0;i<bitNames.count;i++){
+        NSButton* cb = [[NSButton alloc] initWithFrame:NSMakeRect(4 + (i/7)*120, 30 + (i%7)*14, 116, 14)];
+        cb.buttonType = NSButtonTypeSwitch; cb.title = bitNames[i]; cb.tag = (int)i; cb.font=[NSFont systemFontOfSize:10];
+        [attrPanel addSubview:cb]; [boxes addObject:cb];
+    }
+    NSButton* applyAttr = [[NSButton alloc] initWithFrame:NSMakeRect(4, 8, 80, 18)];
+    applyAttr.title = @"Apply Attr"; applyAttr.bezelStyle=NSBezelStyleRounded;
+    [applyAttr setTarget:self];
+    [applyAttr setAction:@selector(onApplyAttr:)];
+    [attrPanel addSubview:applyAttr];
+    objc_setAssociatedObject(self, @"attrBoxes", boxes, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
 }
 
 - (void)onTileChanged:(id)sender
@@ -119,6 +193,49 @@ extern "C" {
     if (t < 0) t = 0;
     if (t > 2047) t = 2047; // TILENUM_MASK is 11 bits
     self.mapView.selectedTile = t;
+}
+
+- (void)onAltChanged:(id)sender
+{
+    self.mapView.altMode = self.altPopup.indexOfSelectedItem;
+}
+
+- (void)onApplyAttr:(id)sender
+{
+    NSInteger tile = self.tileField.integerValue;
+    int count=0; TileAttribType* at = MM_GetTileAttribs(&count);
+    if (!at || tile<0 || tile>=count) return;
+    TileAttribType t = at[tile];
+    t.bits = 0;
+    NSArray* boxes = objc_getAssociatedObject(self, @"attrBoxes");
+    for (NSButton* cb in boxes)
+    {
+        if (cb.state == NSControlStateValueOn)
+        {
+            switch (cb.tag)
+            {
+                case 0: t.bits |= TILE_ATTRIB_TOPSOLID; break;
+                case 1: t.bits |= TILE_ATTRIB_BOTTOMSOLID; break;
+                case 2: t.bits |= TILE_ATTRIB_LEFTSOLID; break;
+                case 3: t.bits |= TILE_ATTRIB_RIGHTSOLID; break;
+                case 4: t.bits |= TILE_ATTRIB_DEATH; break;
+                case 5: t.bits |= TILE_ATTRIB_HURT; break;
+                case 6: t.bits |= TILE_ATTRIB_WATER; break;
+                case 7: t.bits |= TILE_ATTRIB_WIND; break;
+                case 8: t.bits |= TILE_ATTRIB_BULLETGOESTHRU; break;
+                case 9: t.bits |= TILE_ATTRIB_STAIRS; break;
+                case 10: t.bits |= TILE_ATTRIB_FRICTION; break;
+                case 11: t.bits |= TILE_ATTRIB_ICE; break;
+                case 12: t.bits |= TILE_ATTRIB_TRACK; break;
+            }
+        }
+    }
+    MM_SetTileAttrib((int)tile, &t);
+}
+
+- (void)onToolChanged:(id)sender
+{
+    self.mapView.toolMode = self.toolSeg.selectedSegment;
 }
 
 - (void)onOpen:(id)sender
@@ -195,6 +312,7 @@ extern "C" {
     self.offsetToMapImage = UnpackI32BEInPlace(pfPtr + 2);
 
     [self.mapView reloadBitmap];
+    [self.paletteView updateSize];
     [self.window setTitle:[NSString stringWithFormat:@"Level Editor — %@", name]];
 }
 
@@ -236,3 +354,15 @@ extern "C" {
 
 @end
 
+#pragma mark - Tile palette delegate
+
+@interface AppDelegate (Palette) <MMTilePaletteDelegate>
+@end
+
+@implementation AppDelegate (Palette)
+- (void)tilePalette:(MMTilePaletteView *)palette didSelectTile:(NSInteger)tileIndex
+{
+    self.mapView.selectedTile = tileIndex;
+    self.tileField.integerValue = tileIndex;
+}
+@end

@@ -76,14 +76,8 @@
     if (!self.bitmap || !gPlayfield) return;
 
     const int tileIndex = gPlayfield[my][mx] & TILENUM_MASK;
-    extern short *gTileXlatePtr; // from Playfield.c
-    extern Ptr gTilesPtr;        // from Playfield.c
-
-    if (!gTileXlatePtr || !gTilesPtr)
-        return;
-
-    int xlate = gTileXlatePtr[tileIndex];
-    const uint8_t* src = (const uint8_t*)(gTilesPtr + (xlate << (TILE_SIZE_SH*2)));
+    const uint8_t* src = MM_GetTilePixelsForTile(tileIndex);
+    if (!src) return;
 
     uint8_t* dst = [self.bitmap bitmapData];
     const NSInteger bpr = [self.bitmap bytesPerRow];
@@ -126,6 +120,54 @@
     [img addRepresentation:self.bitmap];
     [img drawAtPoint:NSZeroPoint fromRect:NSZeroRect operation:NSCompositingOperationSourceOver fraction:1.0];
 
+    // Draw priority mask overlay
+    [[NSColor colorWithCalibratedRed:1 green:0 blue:0 alpha:0.5] setStroke];
+    NSBezierPath* border = [NSBezierPath bezierPath];
+    [border setLineWidth:1.0];
+    for (int y=0; y<mapH; y++) for (int x=0; x<mapW; x++)
+    {
+        unsigned short t = gPlayfield[y][x];
+        if (t & TILE_PRIORITY_MASK)
+        {
+            NSRect r = NSMakeRect(x*TILE_SIZE*self.zoom, y*TILE_SIZE*self.zoom, TILE_SIZE*self.zoom, TILE_SIZE*self.zoom);
+            [border appendBezierPathWithRect:r];
+        }
+    }
+    [border stroke];
+
+    // Draw alt-map overlay arrows
+    int mapW = gPlayfieldTileWidth;
+    int mapH = gPlayfieldTileHeight;
+    [[NSColor colorWithCalibratedRed:1 green:1 blue:0 alpha:0.6] setStroke];
+    [[NSColor colorWithCalibratedWhite:0 alpha:0.3] setFill];
+    NSBezierPath* arrow = [NSBezierPath bezierPath];
+    [arrow setLineWidth:2.0];
+    for (int y=0; y<mapH; y++)
+    {
+        Byte* row = MM_GetAltMapRowPtr(y);
+        if (!row) break;
+        for (int x=0; x<mapW; x++)
+        {
+            Byte v = row[x]; if (!v) continue;
+            CGFloat cx = (x+0.5)*TILE_SIZE * self.zoom;
+            CGFloat cy = (y+0.5)*TILE_SIZE * self.zoom;
+            CGFloat r = 12 * self.zoom;
+            NSPoint a = NSMakePoint(cx, cy), b=a;
+            switch (v)
+            {
+                case ALT_TILE_DIR_UP:           b = NSMakePoint(cx, cy-r); break;
+                case ALT_TILE_DIR_RIGHT:        b = NSMakePoint(cx+r, cy); break;
+                case ALT_TILE_DIR_DOWN:         b = NSMakePoint(cx, cy+r); break;
+                case ALT_TILE_DIR_LEFT:         b = NSMakePoint(cx-r, cy); break;
+                default: break;
+            }
+            [arrow removeAllPoints];
+            [arrow moveToPoint:a];
+            [arrow lineToPoint:b];
+            [arrow stroke];
+        }
+    }
+
     [gc restoreGraphicsState];
 }
 
@@ -140,11 +182,60 @@
 
     if (tx < 0 || ty < 0 || tx >= gPlayfieldTileWidth || ty >= gPlayfieldTileHeight) return;
 
-    unsigned short cur = gPlayfield[ty][tx];
-    unsigned short flags = cur & ~TILENUM_MASK;
-    gPlayfield[ty][tx] = flags | (unsigned short)self.selectedTile;
-    [self updateTileAtX:tx y:ty];
+    if (self.toolMode == 5)
+    {
+        // Alt-map edit
+        Byte* row = MM_GetAltMapRowPtr(ty);
+        if (row)
+        {
+            Byte v = 0;
+            switch (self.altMode)
+            {
+                case 1: v = ALT_TILE_DIR_UP; break;
+                case 2: v = ALT_TILE_DIR_RIGHT; break;
+                case 3: v = ALT_TILE_DIR_DOWN; break;
+                case 4: v = ALT_TILE_DIR_LEFT; break;
+                default: v = ALT_TILE_NONE; break;
+            }
+            row[tx] = v;
+            [self setNeedsDisplay:YES];
+        }
+    }
+    else if (self.toolMode == 4)
+    {
+        // Item tool: place item with params from AppDelegate
+        // Find a free slot (ITEM_MEMORY set) or reuse first slot
+        ObjectEntryType* items = gMasterItemList;
+        int n = gNumItems;
+        int found = -1;
+        for (int i=0;i<n;i++)
+        {
+            if (items[i].type & ITEM_MEMORY) { found = i; break; }
+        }
+        if (found < 0 && n>0) { found = 0; } // fallback
+        if (found >= 0)
+        {
+            // Pull type/parms from app delegate
+            AppDelegate* app = (AppDelegate*)NSApp.delegate;
+            int itype = app.itemTypeField.integerValue;
+            items[found].x = tx << TILE_SIZE_SH;
+            items[found].y = ty << TILE_SIZE_SH;
+            items[found].type = itype & ITEM_NUM; // clear memory bits
+            items[found].parm[0] = app.itemParm0.integerValue;
+            items[found].parm[1] = app.itemParm1.integerValue;
+            items[found].parm[2] = app.itemParm2.integerValue;
+            items[found].parm[3] = app.itemParm3.integerValue;
+        }
+        [self setNeedsDisplay:YES];
+    }
+    else
+    {
+        // Tile paint
+        unsigned short cur = gPlayfield[ty][tx];
+        unsigned short flags = cur & ~TILENUM_MASK;
+        gPlayfield[ty][tx] = flags | (unsigned short)self.selectedTile;
+        [self updateTileAtX:tx y:ty];
+    }
 }
 
 @end
-

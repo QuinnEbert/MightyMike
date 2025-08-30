@@ -117,3 +117,9 @@ Boolean	NilAdd(ObjectEntryType *);
 void	CreatePlayfieldPermanentMemory(void);
 void	UpdateTileAnimation(void);
 
+// Editor accessors
+int MM_GetNumTiles(void);
+const uint8_t* MM_GetTilePixelsForTile(int tileIndex);
+Byte* MM_GetAltMapRowPtr(int row);
+TileAttribType* MM_GetTileAttribs(int* outCount);
+void MM_SetTileAttrib(int index, const TileAttribType* a);
