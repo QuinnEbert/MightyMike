@@ -1234,7 +1234,7 @@ void MeHitBonusObject(ObjNode *targetNode)
 	else
 	if ((targetNode->Type == ObjType_Coin) && (targetNode->SpriteGroupNum == GroupNum_Coin))
 	{
-		GetCoins(1);
+		GetCoins(5);
 		DeleteObject(targetNode);
 		PlaySound(SOUND_COINS);
 	}
@@ -1562,7 +1562,6 @@ void MoveMyFlame(void)
 	gThisNodePtr->Z = gMyNodePtr->Z-1;
 	gThisNodePtr->YOffset = gMyNodePtr->YOffset;
 }
-
 
 
 

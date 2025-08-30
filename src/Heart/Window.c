@@ -531,37 +531,50 @@ void SetFullscreenMode(bool enforceDisplayPref)
 		SDL_SetWindowFullscreen(gSDLWindow, SDL_WINDOW_FULLSCREEN);
 	}
 #else
-	if (gGamePrefs.displayMode == kDisplayMode_Windowed)
-	{
-		SDL_SetWindowFullscreen(gSDLWindow, false);
-		SDL_SyncWindow(gSDLWindow);
-		if (enforceDisplayPref)
-		{
-			MoveToPreferredDisplay();
-		}
-	}
-	else
-	{
-		if (enforceDisplayPref)
-		{
-			SDL_DisplayID currentDisplay = SDL_GetDisplayForWindow(gSDLWindow);
-			SDL_DisplayID preferredDisplay = gGamePrefs.preferredDisplayMinus1 + 1;
+    if (gGamePrefs.displayMode == kDisplayMode_Windowed)
+    {
+        SDL_SetWindowFullscreen(gSDLWindow, false);
+        SDL_SyncWindow(gSDLWindow);
+#if _WIN32
+        // Restore window decorations when leaving fullscreen on Windows
+        SDL_SetWindowDecorations(gSDLWindow, true);
+#endif
+        if (enforceDisplayPref)
+        {
+            MoveToPreferredDisplay();
+        }
+    }
+    else
+    {
+        if (enforceDisplayPref)
+        {
+            SDL_DisplayID currentDisplay = SDL_GetDisplayForWindow(gSDLWindow);
+            SDL_DisplayID preferredDisplay = gGamePrefs.preferredDisplayMinus1 + 1;
 
-			if (currentDisplay != preferredDisplay)
-			{
-				// We must switch back to windowed mode for the preferred display to take effect
-				SDL_SetWindowFullscreen(gSDLWindow, false);
-				SDL_SyncWindow(gSDLWindow);
-				MoveToPreferredDisplay();
-			}
-		}
+            if (currentDisplay != preferredDisplay)
+            {
+                // We must switch back to windowed mode for the preferred display to take effect
+                SDL_SetWindowFullscreen(gSDLWindow, false);
+                SDL_SyncWindow(gSDLWindow);
+                MoveToPreferredDisplay();
+            }
+        }
 
-		// Enter fullscreen mode
-		SDL_SetWindowFullscreen(gSDLWindow, true);
-		SDL_SyncWindow(gSDLWindow);
-	}
+#if _WIN32
+        // Windows: use borderless windowed fullscreen to avoid stutter on some GPUs
+        SDL_SetWindowFullscreen(gSDLWindow, false);
+        SDL_SyncWindow(gSDLWindow);
+        SDL_SetWindowDecorations(gSDLWindow, false);
+#else
+        // Other platforms: use SDL fullscreen as before
+        SDL_SetWindowFullscreen(gSDLWindow, true);
+        SDL_SyncWindow(gSDLWindow);
+#endif
+    }
 
-	SetOptimalWindowSize();
+    // On Windows in fullscreen, the borderless path sizes the window to the display
+    // inside SetOptimalWindowSize; keep call for all platforms
+    SetOptimalWindowSize();
 	OnChangeIntegerScaling();
 
 	if (gGamePrefs.displayMode == kDisplayMode_Windowed)
@@ -608,6 +621,31 @@ void SetOptimalWindowSize(void)
 {
 	SDL_WindowFlags windowFlags = SDL_GetWindowFlags(gSDLWindow);
 	SDL_RestoreWindow(gSDLWindow);
+
+#if _WIN32
+	// In fullscreen modes on Windows, use borderless windowed fullscreen:
+	// size the window to the display bounds and position it at (0,0) of the target display.
+	if (gGamePrefs.displayMode != kDisplayMode_Windowed)
+	{
+		SDL_DisplayID currentDisplay = SDL_GetDisplayForWindow(gSDLWindow);
+
+		int numDisplays = GetNumDisplays();
+		if (gGamePrefs.preferredDisplayMinus1 <= numDisplays)
+			currentDisplay = gGamePrefs.preferredDisplayMinus1 + 1;
+
+		SDL_Rect displayBounds = {.x=0, .y=0, .w=VISIBLE_WIDTH, .h=VISIBLE_HEIGHT};
+		if (!SDL_GetDisplayBounds(currentDisplay, &displayBounds))
+		{
+			// Fallback to usable bounds if full bounds aren't available
+			bool ok = SDL_GetDisplayUsableBounds(currentDisplay, &displayBounds);
+			GAME_ASSERT_MESSAGE(ok, SDL_GetError());
+		}
+
+		SDL_SetWindowSize(gSDLWindow, displayBounds.w, displayBounds.h);
+		SDL_SetWindowPosition(gSDLWindow, displayBounds.x, displayBounds.y);
+		return;
+	}
+#endif
 
 	int maxZoom = GetMaxIntegerZoomForPreferredDisplay();
 	int zoom = maxZoom;
@@ -691,4 +729,3 @@ void OnChangeIntegerScaling(void)
 	SDLRender_InitTexture();
 #endif
 }
-

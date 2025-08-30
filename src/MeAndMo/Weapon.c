@@ -77,23 +77,23 @@ static	Boolean(*gWeaponShootTable[])(void) =
 				};
 
 static	short	gWeaponQuantities[] =
-				{
-					50,					//SuctionCup
-					20,					//Cake
-					100,				//Oozie
-					30,					//RBand
-					100,				//Toothpaste
-					50,					//Tracer
-					40,					//PixieDust
-					20,					//Rock
-					40,					//HeatSeek
-					30,					//ElephantGun
-					20,					//Pie
-					40,					//DoubleShot
-					50,					//TripleShot
-					100,				//Flamethrower
-					20					//RocketGun
-				};
+                {
+                    100,				//SuctionCup
+                    100,				//Cake
+                    100,				//Oozie
+                    100,				//RBand
+                    100,				//Toothpaste
+                    100,				//Tracer
+                    100,				//PixieDust
+                    100,				//Rock
+                    100,				//HeatSeek
+                    100,				//ElephantGun
+                    100,				//Pie
+                    100,				//DoubleShot
+                    100,				//TripleShot
+                    100,				//Flamethrower
+                    100				//RocketGun
+                };
 
 Byte	gBonusWeaponStartScenes[] =
 				{
@@ -1047,4 +1047,3 @@ void MoveToothpaste(void)
 	CalcObjectBox();
 	UpdateObject();
 }
-

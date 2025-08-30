@@ -116,11 +116,11 @@ short		gMyHealth,gMyMaxHealth;
 
 void InitHealth(void)
 {
-	if (gDifficultySetting == DIFFICULTY_EASY)		// more health in easy mode
-	{
-		gMyHealth = DEFAULT_HEALTH+1;
-		gMyMaxHealth = DEFAULT_HEALTH+1;
-	}
+    if (gDifficultySetting == DIFFICULTY_EASY)		// more health in easy mode
+    {
+        gMyHealth = MAX_HEARTS;      // default to 8 hearts on Easy
+        gMyMaxHealth = MAX_HEARTS;
+    }
 	else
 	{
 		gMyHealth = DEFAULT_HEALTH;
@@ -629,5 +629,4 @@ const int	quitY = gGamePrefs.pfSize == PFSIZE_SMALL ? 220 : ((VISIBLE_HEIGHT-64)
 
 	return(!selection);
 }
-
 

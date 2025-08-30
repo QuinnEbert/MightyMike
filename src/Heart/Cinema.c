@@ -1173,10 +1173,8 @@ short	counter,i;
 	EraseCLUT();
 	EraseBackgroundBuffer();
 
-	if (gDifficultySetting == DIFFICULTY_EASY)
-		LoadBackground(":Images:overheadmap2.tga");				// clown and bargain scenes grayed out
-	else
-		LoadBackground(":Images:overheadmap.tga");				// all scenes in full color
+	// Always show the full-color map regardless of difficulty
+	LoadBackground(":Images:overheadmap.tga");				// all scenes in full color
 
 	DumpBackground();
 
@@ -1690,7 +1688,7 @@ short	selection;
 			vtab += 13;
 		}
 
-		if (i == 200)											// see if get another heart
+		if (i == 100)											// see if get another heart (was 200)
 		{
 			if (gMyMaxHealth < MAX_HEARTS)
 			{
@@ -1835,6 +1833,4 @@ register short	i,digit;
 		num = num/10;
 	}
 }
-
-
 

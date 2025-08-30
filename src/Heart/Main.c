@@ -990,15 +990,10 @@ short	maxScenes;
 
 	switch(gDifficultySetting)
 	{
-//		case	DIFFICULTY_NORMAL:
-//				maxScenes = 4;
-//				break;
 		case	DIFFICULTY_EASY:
-				maxScenes = 3;
-				break;
 		case	DIFFICULTY_NORMAL:
 		case	DIFFICULTY_HARD:
-				maxScenes = 5;
+				maxScenes = MAX_SCENES;
 				break;
 		default:
 				DoFatalAlert("Unknown difficulty setting");
@@ -1450,5 +1445,4 @@ loop:
 
 	goto loop;								// go back to main menu
 }
-
 
