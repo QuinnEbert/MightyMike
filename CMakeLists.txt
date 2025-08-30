@@ -312,3 +312,47 @@ endif()
 
 # Copy documentation to output folder
 configure_file(${CMAKE_SOURCE_DIR}/packaging/ReadMe.txt.in ${CMAKE_CURRENT_BINARY_DIR}/ReadMe.txt)
+
+#------------------------------------------------------------------------------
+# BASIC LEVEL EDITOR (macOS, Objective-C)
+#------------------------------------------------------------------------------
+
+if(APPLE)
+    set(EDITOR_TARGET MMLevelEditor)
+    set(EDITOR_SOURCES
+        tools/LevelEditor/main.m
+        tools/LevelEditor/AppDelegate.h
+        tools/LevelEditor/AppDelegate.mm
+        tools/LevelEditor/MMMapView.h
+        tools/LevelEditor/MMMapView.m
+        # Use existing engine bits to parse maps/tilesets and palette
+        ${GAME_SRCDIR}/Playfield/Playfield.c
+        ${GAME_SRCDIR}/Heart/Misc.c
+        ${GAME_SRCDIR}/Drivers/Palette.c
+        ${GAME_SRCDIR}/Drivers/TGA.c
+    )
+
+    add_executable(${EDITOR_TARGET} MACOSX_BUNDLE ${EDITOR_SOURCES})
+    target_include_directories(${EDITOR_TARGET} PRIVATE ${GAME_SRCDIR}/Headers)
+    set_target_properties(${EDITOR_TARGET} PROPERTIES
+        MACOSX_BUNDLE TRUE
+        XCODE_ATTRIBUTE_LD_RUNPATH_SEARCH_PATHS "@executable_path/../Frameworks"
+        XCODE_ATTRIBUTE_CODE_SIGN_IDENTITY "${CODE_SIGN_IDENTITY}"
+        XCODE_ATTRIBUTE_PRODUCT_BUNDLE_IDENTIFIER ${GAME_IDENTIFIER}.editor
+        MACOSX_BUNDLE_BUNDLE_NAME "Mighty Mike Level Editor"
+        MACOSX_BUNDLE_SHORT_VERSION_STRING ${GAME_VERSION}
+        MACOSX_BUNDLE_COPYRIGHT ${GAME_COPYRIGHT}
+    )
+
+    # Link to Pomme and Cocoa
+    target_link_libraries(${EDITOR_TARGET} PRIVATE Pomme "-framework Cocoa")
+
+    # Copy Data folder into editor bundle
+    if(APPLE)
+        set(EDITOR_DATA_TARGET_LOCATION "$<TARGET_FILE_DIR:${EDITOR_TARGET}>/../Resources")
+    else()
+        set(EDITOR_DATA_TARGET_LOCATION "$<TARGET_FILE_DIR:${EDITOR_TARGET}>/Data")
+    endif()
+    add_custom_command(TARGET ${EDITOR_TARGET} POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_directory "${GAME_DATADIR}" "${EDITOR_DATA_TARGET_LOCATION}")
+endif()
